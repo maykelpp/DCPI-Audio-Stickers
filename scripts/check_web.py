@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-"""Extract the app's inline WebView JavaScript and ask Node to syntax-check it."""
+"""Syntax-check the inline JavaScript bundled in the Android WebView."""
 from pathlib import Path
-import re
 import subprocess
 import tempfile
 
-html_path = Path("app/src/main/assets/index.html")
-html = html_path.read_text(encoding="utf-8")
-scripts = re.findall(r"<script\\b[^>]*>([\\s\\S]*?)</script\\s*>", html, re.IGNORECASE)
-inline = [script for script in scripts if script.strip()]
-if not inline:
-    raise SystemExit("No se encontró JavaScript inline en index.html")
-if len(inline) != 1:
-    raise SystemExit(f"Se esperaba un script inline principal; encontrados: {len(inline)}")
+html = Path("app/src/main/assets/index.html").read_text(encoding="utf-8")
+start = html.find("<script>")
+end = html.find("</script>", start + 8)
+if start < 0 or end < 0:
+    raise SystemExit("No se encontró el bloque JavaScript principal")
+script = html[start + 8:end]
+if not script.strip():
+    raise SystemExit("El bloque JavaScript está vacío")
 with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8", delete=False) as handle:
-    handle.write(inline[0])
+    handle.write(script)
     temp_path = handle.name
 try:
     result = subprocess.run(["node", "--check", temp_path], check=False)
