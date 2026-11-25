@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0c0b">
+<title>DCPI Audio Stickers</title>
+<style>
+:root{
+  --bg:#0a0c0b;--bg2:#121513;--surface:#181c19;--surface2:#202521;--line:#2a312c;
+  --text:#eef3ef;--muted:#8d9a91;--neon:#39ff7a;--neon-dim:rgba(57,255,122,.14);--neon-glow:rgba(57,255,122,.35);
+  --danger:#ff5a5f;--r:16px;--r-s:10px;--nav-h:64px;
+  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+  --font:"Segoe UI",Roboto,"Helvetica Neue",Arial,system-ui,sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+:root[data-theme="oled"]{--bg:#000;--bg2:#050605;--surface:#0d0f0e;--surface2:#151816;--line:#1f2521}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:15px/1.45 var(--font);overflow:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3{letter-spacing:-.01em}
+h3{font-size:15px;margin:18px 0 10px}h3:first-child{margin-top:0}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic-l{width:28px;height:28px}.ic-xl{width:44px;height:44px;color:var(--neon)}
+.muted{color:var(--muted);font-size:13px}
+[hidden]{display:none!important}
+
+/* Layout */
+.app{height:100%;display:flex;flex-direction:column-reverse}
+.stage{flex:1;overflow-y:auto;padding:calc(var(--safe-t) + 20px) 18px 28px;scroll-behavior:smooth}
+.view{display:none;max-width:980px;margin:0 auto}
+.view.active{display:block;animation:enter .35s var(--ease)}
+@keyframes enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rail{background:var(--bg2);border-top:1px solid var(--line);padding:6px 8px calc(var(--safe-b) + 6px)}
+.brand{display:none}
+.nav{display:flex;justify-content:space-around}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;border-radius:12px;color:var(--muted);font-size:11.5px;min-width:68px;transition:color .2s,background .2s}
+.nav-btn.active{color:var(--neon);background:var(--neon-dim)}
+
+/* Brand mark */
+.mark,.hero-mark{display:flex;align-items:center;gap:3px}
+.mark{height:26px}.mark i{width:4px;border-radius:2px;background:var(--neon)}
+.mark i:nth-child(1){height:10px}.mark i:nth-child(2){height:20px}.mark i:nth-child(3){height:26px}.mark i:nth-child(4){height:16px}.mark i:nth-child(5){height:8px}
+.brand-name{font-weight:800;font-size:20px;letter-spacing:.04em;display:flex;flex-direction:column;line-height:1.1}
+.brand-name small{font-weight:500;font-size:11px;color:var(--muted);letter-spacing:.02em}
+
+/* Hero */
+.hero{padding:30px 22px;border:1px solid var(--line);border-radius:24px;background:radial-gradient(120% 140% at 85% 0%,var(--neon-dim),transparent 55%),var(--surface);display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:18px}
+.hero h1{font-size:44px;line-height:1;font-weight:800;letter-spacing:.03em;display:flex;flex-direction:column}
+.hero h1 span{font-size:17px;font-weight:500;color:var(--neon);letter-spacing:.01em;margin-top:6px}
+.hero p{color:var(--muted);max-width:34ch}
+.hero-mark{height:54px;gap:5px;margin-bottom:6px}
+.hero-mark i{width:7px;border-radius:4px;background:var(--neon);box-shadow:0 0 14px var(--neon-glow);animation:pulse 2.4s ease-in-out infinite}
+.hero-mark i:nth-child(1){height:18px}.hero-mark i:nth-child(2){height:34px;animation-delay:.15s}.hero-mark i:nth-child(3){height:52px;animation-delay:.3s}.hero-mark i:nth-child(4){height:40px;animation-delay:.45s}.hero-mark i:nth-child(5){height:48px;animation-delay:.6s}.hero-mark i:nth-child(6){height:28px;animation-delay:.75s}.hero-mark i:nth-child(7){height:14px;animation-delay:.9s}
+@keyframes pulse{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.55)}}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:12px;font-weight:600;transition:transform .15s var(--ease),background .2s,box-shadow .2s,border-color .2s;min-height:44px}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--neon);color:#04140a;box-shadow:0 0 0 0 var(--neon-glow)}
+.btn-primary:hover{box-shadow:0 0 22px var(--neon-glow)}
+.btn-outline{border:1px solid var(--line);background:var(--surface2)}
+.btn-outline:hover{border-color:var(--neon);color:var(--neon)}
+.btn-ghost{color:var(--muted)}.btn-ghost:hover{color:var(--neon)}
+.btn-danger{background:var(--danger);color:#1a0405}
+.btn-lg{padding:14px 22px;font-size:16px;min-height:52px}
+.btn-sm{padding:8px 12px;font-size:13px;min-height:38px}
+.icon-btn{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--muted);transition:background .2s,color .2s}
+.icon-btn:hover{background:var(--surface2);color:var(--neon)}
+
+/* Headings */
+.page-head{margin-bottom:18px}
+.page-head h1{font-size:26px}.page-head p{color:var(--muted);margin-top:2px}
+.page-head.with-back{display:flex;align-items:center;gap:10px}.page-head.with-back>div{flex:1;min-width:0}
+.row-head{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}
+.row-head h2{font-size:18px}
+
+/* Panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stat b{display:block;font-size:26px;color:var(--neon);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+
+/* Dropzone & slots */
+.dropzone{border:1.5px dashed var(--line);border-radius:20px;padding:34px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--surface);transition:border-color .2s,background .2s}
+.dropzone.over{border-color:var(--neon);background:var(--neon-dim)}
+.slots{display:grid;gap:10px;margin:14px 0}
+.slot{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;transition:border-color .2s}
+.slot>.ic{color:var(--muted)}.slot>div{flex:1;min-width:0}
+.slot p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot.filled{border-color:var(--neon)}.slot.filled>.ic{color:var(--neon)}
+.slot h3{margin:0 0 2px}
+.actions{display:flex;margin-top:14px}.actions .btn{flex:1}.actions.two{gap:10px}
+
+/* Cards / lists */
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:34px 18px;text-align:center;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty .ic{width:34px;height:34px;color:var(--neon)}.empty strong{color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;transition:border-color .2s,transform .2s var(--ease)}
+.card:hover{border-color:var(--neon)}
+.thumb{aspect-ratio:16/10;background:var(--bg2);display:grid;place-items:center;position:relative;overflow:hidden}
+.thumb img,.thumb video{width:100%;height:100%;object-fit:cover}
+.thumb .ic{width:34px;height:34px;color:var(--neon)}
+.badge{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.72);border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:12px;font-variant-numeric:tabular-nums}
+.card-body{padding:12px 14px 6px}.card-body h4{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-foot{display:flex;gap:4px;padding:4px 8px 10px}.card-foot .btn{flex:1}
+
+/* Tabs / segmented */
+.tabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto}
+.tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;transition:.2s}
+.tab.active{background:var(--neon);color:#04140a;border-color:var(--neon);font-weight:600}
+.seg{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;padding:10px 6px;border-radius:9px;color:var(--muted);font-size:14px;transition:.2s}
+.seg button.active{background:var(--neon-dim);color:var(--neon);font-weight:600}
+.choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.choice button{text-align:left;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);transition:.2s}
+.choice button small{display:block;color:var(--muted);font-size:12px}
+.choice button.active{border-color:var(--neon);box-shadow:inset 0 0 0 1px var(--neon);color:var(--neon)}
+
+/* Editor */
+.editor-grid,.export-grid{display:grid;gap:14px}
+.preview{aspect-ratio:1;max-height:420px;margin:0 auto;border-radius:14px;background:repeating-conic-gradient(var(--bg2) 0 25%,var(--surface) 0 50%) 0 0/20px 20px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line)}
+.preview img,.preview video{width:100%;height:100%;object-fit:contain}
+.preview .ph{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted)}
+.preview .ph .ic{width:40px;height:40px;color:var(--neon)}
+.wave-wrap{position:relative;height:110px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;overflow:hidden;touch-action:none}
+#wave{width:100%;height:100%;display:block}
+.trim-shade{position:absolute;top:0;bottom:0;background:rgba(0,0,0,.62);pointer-events:none}
+.trim-shade.left{left:0}.trim-shade.right{right:0}
+.handle{position:absolute;top:0;bottom:0;width:22px;margin-left:-11px;cursor:ew-resize;touch-action:none;z-index:3}
+.handle::after{content:"";position:absolute;left:9px;top:0;bottom:0;width:4px;background:var(--neon);border-radius:2px;box-shadow:0 0 10px var(--neon-glow)}
+.playhead{position:absolute;top:0;bottom:0;width:2px;background:#fff;pointer-events:none;z-index:2}
+.time-row{display:flex;justify-content:space-between;font-size:13px;margin:8px 2px;font-variant-numeric:tabular-nums}
+.transport{display:flex;align-items:center;justify-content:center;gap:18px;margin:6px 0 14px}
+.btn-play{width:64px;height:64px;border-radius:50%;background:var(--neon);color:#04140a;display:grid;place-items:center;box-shadow:0 0 24px var(--neon-glow);transition:transform .15s}
+.btn-play:active{transform:scale(.93)}
+.btn-play .ic{width:26px;height:26px;fill:currentColor}
+.tools{display:grid;gap:12px}
+.tool-vol{display:flex;align-items:center;gap:8px}.tool-vol output{width:42px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.tool-trim{display:flex;flex-wrap:wrap;gap:8px}
+input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:linear-gradient(to right,var(--neon) var(--v,80%),var(--line) var(--v,80%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--neon);border:3px solid var(--bg)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--neon);border:3px solid var(--bg)}
+
+/* Info list */
+.info{display:grid;gap:0}
+.info div{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.info div:last-child{border:0}
+.info dt{color:var(--muted)}.info dd{text-align:right;word-break:break-word}
+.progress{height:6px;border-radius:3px;background:var(--line);margin-top:14px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--neon);transition:width .3s}
+
+/* Toasts & modal */
+.toasts{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + var(--safe-b) + 16px);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:50;pointer-events:none}
+.toast{background:var(--surface2);border:1px solid var(--neon);color:var(--text);padding:11px 16px;border-radius:12px;display:flex;align-items:center;gap:8px;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:toast .3s var(--ease)}
+.toast .ic{color:var(--neon);width:18px;height:18px}.toast.err{border-color:var(--danger)}.toast.err .ic{color:var(--danger)}
+.toast.out{opacity:0;transform:translateY(8px);transition:.3s}
+@keyframes toast{from{opacity:0;transform:translateY(14px)}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:grid;place-items:center;z-index:60;padding:20px;backdrop-filter:blur(4px)}
+.modal-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;width:100%;max-width:380px;animation:enter .25s var(--ease)}
+.modal-card h3{font-size:18px;margin-bottom:6px}
+
+/* Desktop / tablet */
+@media (min-width:860px){
+  .app{flex-direction:row}
+  .rail{width:230px;border-top:0;border-right:1px solid var(--line);padding:calc(var(--safe-t) + 24px) 14px;display:flex;flex-direction:column;gap:28px}
+  .brand{display:flex;align-items:center;gap:12px;padding:0 8px}
+  .nav{flex-direction:column;justify-content:flex-start;gap:4px}
+  .nav-btn{flex-direction:row;gap:12px;font-size:15px;padding:12px 14px;min-width:0}
+  .stage{padding:32px 40px}
+  .toasts{bottom:24px}
+  .editor-grid{grid-template-columns:1fr 1fr}.editor-grid .info-panel{grid-column:1/-1}
+  .export-grid{grid-template-columns:1fr 1fr;align-items:start}
+  .slots{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-lib" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></symbol>
+  <symbol id="i-audio" viewBox="0 0 24 24"><path d="M3 12h2M7 8v8M11 4v16M15 8v8M19 10v4M22 12h-1"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 4v16M17 4v16"/></symbol>
+  <symbol id="i-back10" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9H8M8 3L5 6l3 3"/></symbol>
+  <symbol id="i-fwd10" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-9-9h4M16 3l3 3-3 3"/></symbol>
+  <symbol id="i-cut" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.5 8L20 20M8.5 16L20 4"/></symbol>
+  <symbol id="i-vol" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 9a4 4 0 010 6"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 9l5 6M22 9l-5 6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-open" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/></symbol>
+  <symbol id="i-export" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6zM14 3v5h5"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+</svg>
+
+<div class="app" id="app">
+  <aside class="rail" aria-label="Navegación principal">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="brand-name">DCPI<small>Audio Stickers</small></span>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn" data-nav="home"><svg class="ic"><use href="#i-home"/></svg><span>Inicio</span></button>
+      <button class="nav-btn" data-nav="create"><svg class="ic"><use href="#i-plus"/></svg><span>Crear</span></button>
+      <button class="nav-btn" data-nav="library"><svg class="ic"><use href="#i-lib"/></svg><span>Biblioteca</span></button>
+      <button class="nav-btn" data-nav="settings"><svg class="ic"><use href="#i-gear"/></svg><span>Ajustes</span></button>
+    </nav>
+  </aside>
+
+  <main class="stage">
+
+    <!-- 1. INICIO -->
+    <section class="view" id="view-home" data-title="Inicio">
+      <header class="hero">
+        <div class="hero-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <h1>DCPI<span>Audio Stickers</span></h1>
+        <p>Combina imagen, vídeo y sonido en stickers con audio.</p>
+        <button class="btn btn-primary btn-lg" data-nav="create"><svg class="ic"><use href="#i-plus"/></svg>Crear sticker</button>
+      </header>
+      <div class="stats" id="stats"></div>
+      <div class="row-head"><h2>Proyectos recientes</h2><button class="btn btn-ghost btn-sm" data-nav="library"><svg class="ic"><use href="#i-lib"/></svg>Biblioteca</button></div>
+      <div id="recent"></div>
+    </section>
+
+    <!-- 2. CREAR -->
+    <section class="view" id="view-create" data-title="Crear sticker">
+      <header class="page-head"><h1>Crear sticker</h1><p>Añade al menos una imagen, un vídeo o un audio.</p></header>
+      <div class="dropzone" id="dropzone" tabindex="0">
+        <svg class="ic ic-xl"><use href="#i-upload"/></svg>
+        <strong>Arrastra y suelta tus archivos aquí</strong>
+        <span class="muted">En Android, usa los botones de abajo para abrir el selector de archivos.</span>
+      </div>
+      <div class="slots">
+        <article class="slot" data-slot="image"><svg class="ic ic-l"><use href="#i-image"/></svg><div><h3>Imagen</h3><p class="muted" data-slot-info>Sin archivo</p></div><button class="btn btn-outline btn-sm" data-pick="image">Importar imagen</button><button class="icon-btn" data-clear="image" aria-label="Quitar imagen" hidden><svg class="ic"><use href="#i-x"/></svg></button></article>
+        <article class="slot" data-slot="video"><svg class="ic ic-l"><use href="#i-video"/></svg><div><h3>Vídeo</h3><p class="muted" data-slot-info>Sin archivo</p></div><button class="btn btn-outline btn-sm" data-pick="video">Importar vídeo</button><button class="icon-btn" data-clear="video" aria-label="Quitar vídeo" hidden><svg class="ic"><use href="#i-x"/></svg></button></article>
+        <article class="slot" data-slot="audio"><svg class="ic ic-l"><use href="#i-audio"/></svg><div><h3>Audio</h3><p class="muted" data-slot-info>Sin archivo</p></div><button class="btn btn-outline btn-sm" data-pick="audio">Importar audio</button><button class="icon-btn" data-clear="audio" aria-label="Quitar audio" hidden><svg class="ic"><use href="#i-x"/></svg></button></article>
+      </div>
+      <input type="file" id="file-image" accept="image/*" hidden>
+      <input type="file" id="file-video" accept="video/*" hidden>
+      <input type="file" id="file-audio" accept="audio/*" hidden>
+      <div class="actions"><button class="btn btn-primary btn-lg" id="btn-open-editor" disabled><svg class="ic"><use href="#i-cut"/></svg>Abrir editor</button></div>
+    </section>
+
+    <!-- 3. EDITOR -->
+    <section class="view" id="view-editor" data-title="Editor">
+      <header class="page-head with-back">
+        <button class="icon-btn" data-nav="create" aria-label="Volver"><svg class="ic"><use href="#i-back"/></svg></button>
+        <div><h1 id="ed-title">Editor</h1><p id="ed-sub" class="muted"></p></div>
+        <button class="btn btn-primary btn-sm" id="btn-to-export"><svg class="ic"><use href="#i-export"/></svg>Exportar</button>
+      </header>
+      <div class="editor-grid">
+        <div class="panel preview-panel">
+          <div class="preview" id="preview"></div>
+        </div>
+        <div class="panel">
+          <div class="wave-wrap" id="wave-wrap">
+            <canvas id="wave" height="110"></canvas>
+            <div class="trim-shade left" id="shade-l"></div>
+            <div class="trim-shade right" id="shade-r"></div>
+            <div class="handle" id="h-start" role="slider" aria-label="Inicio del recorte" tabindex="0"></div>
+            <div class="handle" id="h-end" role="slider" aria-label="Fin del recorte" tabindex="0"></div>
+            <div class="playhead" id="playhead"></div>
+          </div>
+          <div class="time-row"><span id="t-cur">0:00.0</span><span class="muted" id="t-trim">Recorte: —</span><span id="t-dur">0:00.0</span></div>
+          <div class="transport">
+            <button class="icon-btn" id="b-back" aria-label="Retroceder 5 segundos"><svg class="ic"><use href="#i-back10"/></svg></button>
+            <button class="btn-play" id="b-play" aria-label="Reproducir"><svg class="ic"><use href="#i-play"/></svg></button>
+            <button class="icon-btn" id="b-fwd" aria-label="Avanzar 5 segundos"><svg class="ic"><use href="#i-fwd10"/></svg></button>
+          </div>
+          <div class="tools">
+            <div class="tool-vol"><button class="icon-btn" id="b-mute" aria-label="Silenciar"><svg class="ic"><use href="#i-vol"/></svg></button><input type="range" id="vol" min="0" max="100" value="80" aria-label="Volumen"><output id="vol-out">80%</output></div>
+            <div class="tool-trim">
+              <button class="btn btn-outline btn-sm" id="b-set-in"><svg class="ic"><use href="#i-cut"/></svg>Inicio aquí</button>
+              <button class="btn btn-outline btn-sm" id="b-set-out"><svg class="ic"><use href="#i-cut"/></svg>Fin aquí</button>
+              <button class="btn btn-ghost btn-sm" id="b-reset">Restablecer</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel info-panel">
+          <h3>Información del archivo</h3>
+          <dl class="info" id="ed-info"></dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. BIBLIOTECA -->
+    <section class="view" id="view-library" data-title="Biblioteca">
+      <header class="page-head"><h1>Biblioteca</h1><p>Stickers creados y proyectos guardados.</p></header>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-filter="all" role="tab">Todo</button>
+        <button class="tab" data-filter="sticker" role="tab">Stickers</button>
+        <button class="tab" data-filter="project" role="tab">Proyectos</button>
+      </div>
+      <div id="library"></div>
+    </section>
+
+    <!-- 5. EXPORTACIÓN -->
+    <section class="view" id="view-export" data-title="Exportación">
+      <header class="page-head with-back">
+        <button class="icon-btn" data-nav="editor" aria-label="Volver al editor"><svg class="ic"><use href="#i-back"/></svg></button>
+        <div><h1>Exportación</h1><p class="muted" id="ex-sub"></p></div>
+      </header>
+      <div class="export-grid">
+        <div class="panel"><div class="preview" id="ex-preview"></div></div>
+        <div class="panel">
+          <h3>Formato de salida</h3>
+          <div class="choice" id="ex-format"></div>
+          <h3>Calidad</h3>
+          <div class="seg" id="ex-quality"></div>
+          <dl class="info" id="ex-info"></dl>
+          <div class="actions two">
+            <button class="btn btn-primary btn-lg" id="btn-export"><svg class="ic"><use href="#i-export"/></svg>Exportar</button>
+            <button class="btn btn-outline btn-lg" id="btn-share"><svg class="ic"><use href="#i-share"/></svg>Compartir</button>
+          </div>
+          <div class="progress" id="ex-progress" hidden><i></i></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. CONFIGURACIÓN -->
+    <section class="view" id="view-settings" data-title="Configuración">
+      <header class="page-head"><h1>Configuración</h1></header>
+      <div class="panel">
+        <h3>Tema visual</h3>
+        <div class="seg" id="set-theme"></div>
+        <h3>Calidad de exportación predeterminada</h3>
+        <div class="seg" id="set-quality"></div>
+      </div>
+      <div class="panel">
+        <h3>Información de la aplicación</h3>
+        <dl class="info">
+          <div><dt>Aplicación</dt><dd>DCPI Audio Stickers</dd></div>
+          <div><dt>Versión</dt><dd id="app-ver">1.0.0-ui</dd></div>
+          <div><dt>Estado del motor</dt><dd id="engine-state">No conectado</dd></div>
+          <div><dt>Interfaz</dt><dd>HTML5 · WebView Android</dd></div>
+        </dl>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <h3 id="modal-title"></h3><p id="modal-text" class="muted"></p>
+    <div class="actions two"><button class="btn btn-outline" id="modal-cancel">Cancelar</button><button class="btn btn-danger" id="modal-ok">Eliminar</button></div>
+  </div>
+</div>
+
+<script>
+/* DCPI Audio Stickers — capa de interfaz.
+ * PUNTOS DE INTEGRACIÓN (Kotlin / motor multimedia):
+ *   window.DCPI.engine = {
+ *     exportProject(project, options, onProgress) -> Promise<{path, size}>
+ *     shareProject(project)                       -> Promise
+ *     getWaveform(project)                        -> Promise<number[]>  (picos 0..1)
+ *   }
+ * Mientras engine no exista, la UI avisa y no simula resultados.
+ * Eventos emitidos en document: "dcpi:export", "dcpi:share", "dcpi:delete". */
+(() => {
+'use strict';
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const icon = n => `<svg class="ic"><use href="#i-${n}"/></svg>`;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtTime = s => { s = Math.max(0, s || 0); return `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`; };
+const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(2) + ' MB';
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+const FORMATS = [
+  { id: 'mp4', label: 'MP4', note: 'Vídeo + audio' },
+  { id: 'webm', label: 'WebM', note: 'Vídeo + audio' },
+  { id: 'm4a', label: 'M4A', note: 'Solo audio' }
+];
+const QUALITIES = [{ id: 'standard', label: 'Estándar' }, { id: 'high', label: 'Alta' }, { id: 'max', label: 'Máxima' }];
+const THEMES = [{ id: 'dark', label: 'Oscuro' }, { id: 'oled', label: 'Negro OLED' }];
+
+const settings = Object.assign({ theme: 'dark', quality: 'high' }, (() => { try { return JSON.parse(localStorage.getItem('dcpi-settings')) || {}; } catch { return {}; } })());
+const state = { projects: [], draft: { image: null, video: null, audio: null }, current: null, filter: 'all', format: 'mp4', quality: settings.quality, view: 'home' };
+let media = null, slaveVideo = null, peaks = [];
+
+window.DCPI = window.DCPI || { engine: null, version: '1.0.0-ui' };
+
+/* ---------- Componentes reutilizables ---------- */
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type === 'err' ? ' err' : '');
+  el.innerHTML = icon(type === 'err' ? 'x' : 'check') + `<span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 2800);
+}
+function confirmDialog(title, text, onOk) {
+  $('#modal-title').textContent = title; $('#modal-text').textContent = text;
+  const m = $('#modal'); m.hidden = false;
+  const close = () => { m.hidden = true; $('#modal-ok').onclick = $('#modal-cancel').onclick = null; };
+  $('#modal-cancel').onclick = close; $('#modal-ok').onclick = () => { close(); onOk(); };
+}
+function emptyState(ic, title, text, btn) {
+  return `<div class="empty">${icon(ic)}<strong>${title}</strong><span>${text}</span>${btn ? `<button class="btn btn-primary btn-sm" data-nav="${btn.nav}">${btn.label}</button>` : ''}</div>`;
+}
+function segmented(el, items, value, onChange) {
+  el.innerHTML = items.map(i => `<button data-v="${i.id}" class="${i.id === value ? 'active' : ''}">${i.label}</button>`).join('');
+  el.onclick = e => { const b = e.target.closest('button'); if (!b) return; $$('button', el).forEach(x => x.classList.toggle('active', x === b)); onChange(b.dataset.v); };
+}
+function infoList(rows) { return rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join(''); }
+function thumbHTML(p) {
+  const v = p.visual;
+  const inner = v ? (v.kind === 'image' ? `<img src="${v.url}" alt="">` : `<video src="${v.url}#t=0.1" muted preload="metadata"></video>`) : icon('audio');
+  return `<div class="thumb">${inner}${p.duration ? `<span class="badge">${fmtTime(p.duration)}</span>` : ''}</div>`;
+}
+function projectCard(p) {
+  return `<article class="card" data-id="${p.id}">${thumbHTML(p)}
+    <div class="card-body"><h4>${esc(p.name)}</h4><p class="muted">${p.exported ? 'Sticker · ' + p.exported.format.toUpperCase() : 'Proyecto guardado'}</p></div>
+    <div class="card-foot"><button class="btn btn-outline btn-sm" data-open="${p.id}">${icon('open')}Abrir</button><button class="btn btn-ghost btn-sm" data-del="${p.id}">${icon('trash')}Eliminar</button></div></article>`;
+}
+
+/* ---------- Navegación ---------- */
+function go(view) {
+  if ((view === 'editor' || view === 'export') && !state.current) { toast('Primero crea o abre un proyecto', 'err'); view = 'create'; }
+  if (view !== 'editor' && media && !media.paused) togglePlay();
+  state.view = view;
+  $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+  const tab = view === 'editor' ? 'create' : view === 'export' ? 'library' : view;
+  $$('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === tab));
+  $('#app .stage').scrollTop = 0;
+  if (view === 'home') renderHome();
+  if (view === 'library') renderLibrary();
+  if (view === 'editor') renderEditor();
+  if (view === 'export') renderExport();
+  if (view === 'settings') engineLabel();
+  document.title = 'DCPI · ' + $('#view-' + view).dataset.title;
+  if (location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
+}
+document.addEventListener('click', e => {
+  const n = e.target.closest('[data-nav]'); if (n) return go(n.dataset.nav);
+  const o = e.target.closest('[data-open]'); if (o) return openProject(o.dataset.open);
+  const d = e.target.closest('[data-del]'); if (d) return deleteProject(d.dataset.del);
+});
+
+/* ---------- Inicio ---------- */
+function renderHome() {
+  const total = state.projects.reduce((a, p) => a + (p.duration || 0), 0);
+  $('#stats').innerHTML = [[state.projects.length, 'Proyectos'], [state.projects.filter(p => p.exported).length, 'Stickers'], [fmtTime(total), 'Duración total']]
+    .map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
+  const recent = state.projects.slice(-4).reverse();
+  $('#recent').innerHTML = recent.length ? `<div class="grid">${recent.map(projectCard).join('')}</div>`
+    : emptyState('lib', 'Aún no hay proyectos', 'Crea tu primer sticker con audio para verlo aquí.', { nav: 'create', label: 'Crear sticker' });
+}
+
+/* ---------- Crear: importación ---------- */
+const KINDS = { image: 'imagen', video: 'vídeo', audio: 'audio' };
+function mediaDuration(kind, url) {
+  return new Promise(res => {
+    if (kind === 'image') return res(0);
+    const el = document.createElement(kind); el.preload = 'metadata'; el.src = url;
+    el.onloadedmetadata = () => res(isFinite(el.duration) ? el.duration : 0);
+    el.onerror = () => res(0);
+  });
+}
+async function setSlot(kind, file) {
+  if (!file) return;
+  if (!file.type.startsWith(kind + '/')) return toast(`El archivo no es ${kind === 'audio' ? 'un' : 'una'} ${KINDS[kind]} válido`, 'err');
+  if (state.draft[kind]) URL.revokeObjectURL(state.draft[kind].url);
+  const url = URL.createObjectURL(file);
+  state.draft[kind] = { kind, file, url, name: file.name, size: file.size, type: file.type, duration: await mediaDuration(kind, url) };
+  renderSlots(); toast(`${KINDS[kind][0].toUpperCase() + KINDS[kind].slice(1)} importado`);
+}
+function clearSlot(kind) { if (state.draft[kind]) URL.revokeObjectURL(state.draft[kind].url); state.draft[kind] = null; renderSlots(); }
+function renderSlots() {
+  $$('.slot').forEach(s => {
+    const k = s.dataset.slot, d = state.draft[k];
+    s.classList.toggle('filled', !!d);
+    $('[data-slot-info]', s).textContent = d ? `${d.name} · ${fmtSize(d.size)}${d.duration ? ' · ' + fmtTime(d.duration) : ''}` : 'Sin archivo';
+    $(`[data-pick]`, s).textContent = d ? 'Cambiar' : 'Importar ' + KINDS[k];
+    $('[data-clear]', s).hidden = !d;
+  });
+  $('#btn-open-editor').disabled = !Object.values(state.draft).some(Boolean);
+}
+$$('[data-pick]').forEach(b => b.onclick = () => $('#file-' + b.dataset.pick).click());
+$$('[data-clear]').forEach(b => b.onclick = () => clearSlot(b.dataset.clear));
+['image', 'video', 'audio'].forEach(k => $('#file-' + k).onchange = e => { setSlot(k, e.target.files[0]); e.target.value = ''; });
+const dz = $('#dropzone');
+['dragenter', 'dragover'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.remove('over'); }));
+dz.addEventListener('drop', e => [...e.dataTransfer.files].forEach(f => { const k = f.type.split('/')[0]; if (KINDS[k]) setSlot(k, f); else toast(`Formato no admitido: ${f.name}`, 'err'); }));
+dz.addEventListener('keydown', e => { if (e.key === 'Enter') $('#file-image').click(); });
+
+$('#btn-open-editor').onclick = () => {
+  const d = state.draft, visual = d.video || d.image, audio = d.audio;
+  const main = audio || d.video;
+  const p = {
+    id: 'p' + Date.now(), name: (visual || audio).name.replace(/\.[^.]+$/, ''), createdAt: Date.now(),
+    visual, audio, duration: main ? main.duration : 0, trimStart: 0, trimEnd: main ? main.duration : 0, volume: .8, exported: null
+  };
+  state.projects.push(p); state.draft = { image: null, video: null, audio: null }; renderSlots();
+  state.current = p; toast('Proyecto guardado en la biblioteca'); go('editor');
+};
+
+/* ---------- Editor ---------- */
+function openProject(id) { state.current = state.projects.find(p => p.id === id); go('editor'); }
+
+function seededPeaks(n, seed) {
+  let s = seed; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  return Array.from({ length: n }, (_, i) => .18 + .8 * Math.abs(Math.sin(i / 7 + r() * 2)) * (.45 + r() * .55));
+}
+function drawWave() {
+  const c = $('#wave'), w = c.clientWidth, h = c.clientHeight, dpr = window.devicePixelRatio || 1;
+  c.width = w * dpr; c.height = h * dpr; const g = c.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
+  const p = state.current, step = 4, n = Math.floor(w / step), start = p.duration ? p.trimStart / p.duration : 0, end = p.duration ? p.trimEnd / p.duration : 1;
+  for (let i = 0; i < n; i++) {
+    const v = peaks[Math.floor(i / n * peaks.length)] || .1, bh = Math.max(3, v * (h - 14)), x = i * step, f = i / n;
+    g.fillStyle = f >= start && f <= end ? '#39ff7a' : '#3b4a40';
+    g.fillRect(x, (h - bh) / 2, 2.4, bh);
+  }
+}
+function layoutTrim() {
+  const p = state.current, d = p.duration || 1, a = p.trimStart / d * 100, b = p.trimEnd / d * 100;
+  $('#h-start').style.left = a + '%'; $('#h-end').style.left = b + '%';
+  $('#shade-l').style.width = a + '%'; $('#shade-r').style.width = (100 - b) + '%';
+  $('#t-trim').textContent = p.duration ? `Recorte: ${fmtTime(p.trimStart)} – ${fmtTime(p.trimEnd)}` : 'Recorte: no disponible';
+  drawWave();
+}
+function renderEditor() {
+  const p = state.current; if (!p) return;
+  stopMedia();
+  $('#ed-title').textContent = p.name;
+  $('#ed-sub').textContent = [p.visual && p.visual.kind === 'image' ? 'Imagen' : p.visual ? 'Vídeo' : null, p.audio ? 'Audio' : null].filter(Boolean).join(' + ');
+  const pv = $('#preview');
+  pv.innerHTML = p.visual ? (p.visual.kind === 'image' ? `<img src="${p.visual.url}" alt="Vista previa">` : `<video src="${p.visual.url}" playsinline preload="auto"></video>`)
+    : `<div class="ph">${icon('audio')}<span>Sticker solo de audio</span></div>`;
+  const vid = $('video', pv);
+  if (p.audio) { media = new Audio(p.audio.url); slaveVideo = vid; if (vid) vid.muted = true; } else { media = vid || null; slaveVideo = null; }
+  if (media) { media.volume = p.volume; media.ontimeupdate = tick; media.onended = () => { setPlayIcon(false); }; }
+  const has = !!(media && p.duration);
+  ['b-play', 'b-back', 'b-fwd', 'b-set-in', 'b-set-out', 'b-reset'].forEach(i => $('#' + i).disabled = !has);
+  $('#wave-wrap').style.opacity = has ? 1 : .4;
+  peaks = p.peaks || seededPeaks(160, 7 + p.name.length * 13);
+  if (p.audio && window.DCPI.engine && window.DCPI.engine.getWaveform) window.DCPI.engine.getWaveform(p).then(r => { p.peaks = peaks = r; drawWave(); }).catch(() => {});
+  $('#vol').value = Math.round(p.volume * 100); setVol(p.volume * 100);
+  $('#t-dur').textContent = fmtTime(p.duration); $('#t-cur').textContent = fmtTime(0); $('#playhead').style.left = '0%';
+  setPlayIcon(false);
+  const rows = [['Nombre', p.name]];
+  if (p.visual) rows.push([p.visual.kind === 'image' ? 'Imagen' : 'Vídeo', `${p.visual.type} · ${fmtSize(p.visual.size)}`]);
+  if (p.audio) rows.push(['Audio', `${p.audio.type || 'audio'} · ${fmtSize(p.audio.size)}`]);
+  rows.push(['Duración', p.duration ? fmtTime(p.duration) : 'Sin pista temporal'], ['Onda de audio', p.audio ? (p.peaks ? 'Real' : 'Referencia visual (pendiente del motor)') : 'Sin audio']);
+  $('#ed-info').innerHTML = infoList(rows);
+  requestAnimationFrame(layoutTrim);
+}
+function stopMedia() { if (media) { media.pause(); media.ontimeupdate = null; } if (slaveVideo) slaveVideo.pause(); }
+function setPlayIcon(playing) { const b = $('#b-play'); b.innerHTML = icon(playing ? 'pause' : 'play'); b.setAttribute('aria-label', playing ? 'Pausar' : 'Reproducir'); }
+function seek(t) { const p = state.current; t = clamp(t, 0, p.duration); media.currentTime = t; if (slaveVideo) slaveVideo.currentTime = t; tick(); }
+function tick() {
+  const p = state.current; if (!media || !p) return;
+  if (media.currentTime >= p.trimEnd && !media.paused) { media.pause(); if (slaveVideo) slaveVideo.pause(); setPlayIcon(false); seek(p.trimStart); return; }
+  $('#t-cur').textContent = fmtTime(media.currentTime);
+  $('#playhead').style.left = (media.currentTime / p.duration * 100) + '%';
+}
+function togglePlay() {
+  const p = state.current; if (!media) return;
+  if (media.paused) {
+    if (media.currentTime < p.trimStart || media.currentTime >= p.trimEnd) seek(p.trimStart);
+    media.play(); if (slaveVideo) { slaveVideo.currentTime = media.currentTime; slaveVideo.play(); } setPlayIcon(true);
+  } else { media.pause(); if (slaveVideo) slaveVideo.pause(); setPlayIcon(false); }
+}
+$('#b-play').onclick = togglePlay;
+$('#b-back').onclick = () => seek(media.currentTime - 5);
+$('#b-fwd').onclick = () => seek(media.currentTime + 5);
+$('#b-set-in').onclick = () => { const p = state.current; if (media.currentTime >= p.trimEnd - .2) return toast('El inicio debe ir antes del final', 'err'); p.trimStart = media.currentTime; layoutTrim(); toast('Inicio del recorte actualizado'); };
+$('#b-set-out').onclick = () => { const p = state.current; if (media.currentTime <= p.trimStart + .2) return toast('El final debe ir después del inicio', 'err'); p.trimEnd = media.currentTime; layoutTrim(); toast('Final del recorte actualizado'); };
+$('#b-reset').onclick = () => { const p = state.current; p.trimStart = 0; p.trimEnd = p.duration; layoutTrim(); toast('Recorte restablecido'); };
+
+function setVol(v) {
+  const p = state.current; $('#vol').style.setProperty('--v', v + '%'); $('#vol-out').textContent = Math.round(v) + '%';
+  $('#b-mute').innerHTML = icon(v < 1 ? 'mute' : 'vol');
+  if (p) { p.volume = v / 100; if (media) media.volume = p.volume; }
+}
+$('#vol').oninput = e => setVol(+e.target.value);
+let lastVol = 80;
+$('#b-mute').onclick = () => { const cur = +$('#vol').value; if (cur > 0) { lastVol = cur; $('#vol').value = 0; setVol(0); } else { $('#vol').value = lastVol; setVol(lastVol); } };
+
+/* Arrastre de manejadores de recorte */
+function bindHandle(el, which) {
+  const wrap = $('#wave-wrap');
+  const move = x => {
+    const p = state.current, r = wrap.getBoundingClientRect(), t = clamp((x - r.left) / r.width, 0, 1) * p.duration;
+    if (which === 'start') p.trimStart = clamp(t, 0, p.trimEnd - .2); else p.trimEnd = clamp(t, p.trimStart + .2, p.duration);
+    layoutTrim();
+  };
+  el.addEventListener('pointerdown', e => {
+    if (!state.current.duration) return; e.preventDefault(); el.setPointerCapture(e.pointerId);
+    const m = ev => move(ev.clientX), u = () => { el.removeEventListener('pointermove', m); el.removeEventListener('pointerup', u); };
+    el.addEventListener('pointermove', m); el.addEventListener('pointerup', u);
+  });
+  el.addEventListener('keydown', e => {
+    const p = state.current, d = e.key === 'ArrowRight' ? .1 : e.key === 'ArrowLeft' ? -.1 : 0; if (!d) return;
+    if (which === 'start') p.trimStart = clamp(p.trimStart + d, 0, p.trimEnd - .2); else p.trimEnd = clamp(p.trimEnd + d, p.trimStart + .2, p.duration);
+    layoutTrim();
+  });
+}
+bindHandle($('#h-start'), 'start'); bindHandle($('#h-end'), 'end');
+$('#wave-wrap').addEventListener('pointerdown', e => {
+  if (e.target.classList.contains('handle') || !media || !state.current.duration) return;
+  const r = e.currentTarget.getBoundingClientRect(); seek((e.clientX - r.left) / r.width * state.current.duration);
+});
+window.addEventListener('resize', () => { if (state.view === 'editor' && state.current) layoutTrim(); });
+$('#btn-to-export').onclick = () => go('export');
+
+/* ---------- Biblioteca ---------- */
+function renderLibrary() {
+  const list = state.projects.filter(p => state.filter === 'all' || (state.filter === 'sticker' ? p.exported : !p.exported)).reverse();
+  const msgs = { all: ['Tu biblioteca está vacía', 'Los proyectos y stickers que crees aparecerán aquí.'], sticker: ['Aún no has exportado stickers', 'Exporta un proyecto desde el editor.'], project: ['No hay proyectos pendientes', 'Los proyectos sin exportar aparecerán aquí.'] };
+  $('#library').innerHTML = list.length ? `<div class="grid">${list.map(projectCard).join('')}</div>`
+    : emptyState('lib', msgs[state.filter][0], msgs[state.filter][1], state.filter === 'all' ? { nav: 'create', label: 'Crear sticker' } : null);
+}
+$$('.tab').forEach(t => t.onclick = () => { state.filter = t.dataset.filter; $$('.tab').forEach(x => x.classList.toggle('active', x === t)); renderLibrary(); });
+function deleteProject(id) {
+  const p = state.projects.find(x => x.id === id); if (!p) return;
+  confirmDialog('¿Eliminar proyecto?', `“${p.name}” se quitará de la biblioteca. Esta acción no se puede deshacer.`, () => {
+    [p.visual, p.audio].forEach(m => m && URL.revokeObjectURL(m.url));
+    state.projects = state.projects.filter(x => x.id !== id); if (state.current === p) state.current = null;
+    document.dispatchEvent(new CustomEvent('dcpi:delete', { detail: { id } }));
+    toast('Proyecto eliminado'); go(state.view);
+  });
+}
+
+/* ---------- Exportación ---------- */
+function renderExport() {
+  const p = state.current; if (!p) return;
+  $('#ex-sub').textContent = p.name;
+  $('#ex-preview').innerHTML = p.visual ? (p.visual.kind === 'image' ? `<img src="${p.visual.url}" alt="">` : `<video src="${p.visual.url}#t=0.1" muted playsinline preload="metadata"></video>`) : `<div class="ph">${icon('audio')}<span>Sticker solo de audio</span></div>`;
+  const usable = FORMATS.filter(f => f.id === 'm4a' ? !!(p.audio || (p.visual && p.visual.kind === 'video')) : true);
+  if (!usable.some(f => f.id === state.format)) state.format = usable[0].id;
+  $('#ex-format').innerHTML = usable.map(f => `<button data-f="${f.id}" class="${f.id === state.format ? 'active' : ''}">${f.label}<small>${f.note}</small></button>`).join('');
+  $('#ex-format').onclick = e => { const b = e.target.closest('button'); if (!b) return; state.format = b.dataset.f; renderExport(); };
+  segmented($('#ex-quality'), QUALITIES, state.quality, v => { state.quality = v; renderExport(); });
+  const len = p.duration ? p.trimEnd - p.trimStart : 0, src = (p.visual ? p.visual.size : 0) + (p.audio ? p.audio.size : 0);
+  $('#ex-info').innerHTML = infoList([['Formato', state.format.toUpperCase()], ['Duración final', len ? fmtTime(len) : 'Imagen estática'], ['Tamaño de origen', fmtSize(src)], ['Tamaño final', p.exported ? fmtSize(p.exported.size) : 'Se calcula al exportar'], ['Volumen', Math.round(p.volume * 100) + '%']]);
+}
+function setProgress(v) { const bar = $('#ex-progress'); bar.hidden = v == null; if (v != null) $('i', bar).style.width = Math.round(v * 100) + '%'; }
+window.DCPI.setProgress = setProgress;
+$('#btn-export').onclick = async () => {
+  const p = state.current, eng = window.DCPI.engine;
+  const opts = { format: state.format, quality: state.quality, trimStart: p.trimStart, trimEnd: p.trimEnd, volume: p.volume };
+  document.dispatchEvent(new CustomEvent('dcpi:export', { detail: { project: p, options: opts } }));
+  if (!eng || !eng.exportProject) return toast('Motor de exportación no conectado todavía', 'err');
+  const btn = $('#btn-export'); btn.disabled = true; setProgress(0);
+  try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); toast('Sticker exportado'); renderExport(); }
+  catch (err) { toast('No se pudo exportar el sticker', 'err'); }
+  finally { btn.disabled = false; setTimeout(() => setProgress(null), 600); }
+};
+$('#btn-share').onclick = async () => {
+  const p = state.current, eng = window.DCPI.engine;
+  document.dispatchEvent(new CustomEvent('dcpi:share', { detail: { project: p } }));
+  if (!p.exported) return toast('Exporta el sticker antes de compartirlo', 'err');
+  if (!eng || !eng.shareProject) return toast('Motor de compartir no conectado todavía', 'err');
+  try { await eng.shareProject(p); } catch { toast('No se pudo compartir', 'err'); }
+};
+
+/* ---------- Configuración ---------- */
+function persist() { try { localStorage.setItem('dcpi-settings', JSON.stringify(settings)); } catch {} }
+function applyTheme() { document.documentElement.dataset.theme = settings.theme; const m = $('meta[name=theme-color]'); if (m) m.content = settings.theme === 'oled' ? '#000000' : '#0a0c0b'; }
+segmented($('#set-theme'), THEMES, settings.theme, v => { settings.theme = v; applyTheme(); persist(); toast('Tema aplicado'); });
+segmented($('#set-quality'), QUALITIES, settings.quality, v => { settings.quality = v; state.quality = v; persist(); toast('Calidad predeterminada guardada'); });
+$('#app-ver').textContent = window.DCPI.version;
+function engineLabel() { $('#engine-state').textContent = window.DCPI.engine ? 'Conectado' : 'No conectado'; }
+
+/* ---------- Inicio de la app ---------- */
+applyTheme(); renderSlots(); engineLabel();
+$('#view-settings').addEventListener('transitionend', engineLabel);
+window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if ($('#view-' + v) && v !== state.view) go(v); });
+go($('#view-' + location.hash.slice(1)) && !['editor', 'export'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'home');
+})();
+
+</script>
+</body>
+</html>
