@@ -323,7 +323,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
           <div class="choice" id="ex-format"></div>
           <h3>Calidad</h3>
           <div class="seg" id="ex-quality"></div>
-          <p class="muted" style="margin-top:8px">La exportación disponible conserva el códec original y recorta sin recodificar. La calidad y el volumen solo afectan a la previsualización; el procesamiento real y la exportación de vídeo aún no están disponibles.</p>
+          <p class="muted" style="margin-top:8px">El audio se procesa y recodifica a AAC: el recorte, el volumen y la calidad seleccionada se aplican al archivo final. La exportación audiovisual de vídeo todavía no está disponible.</p>
           <dl class="info" id="ex-info"></dl>
           <div class="actions two">
             <button class="btn btn-primary btn-lg" id="btn-export"><svg class="ic"><use href="#i-export"/></svg>Exportar</button>
@@ -504,12 +504,14 @@ if (window.DCPIAndroid) {
           project.id, sourceKind,
           Math.round(options.trimStart * 1000),
           Math.round(options.trimEnd * 1000),
-          project.name || 'DCPI_Audio'
+          project.name || 'DCPI_Audio',
+          Number(options.volume),
+          options.quality
         )), 0));
       const result = JSON.parse(raw);
       if (result.error) throw new Error(result.error);
       if (onProgress) onProgress(1);
-      return { uri: result.uri, name: result.name, size: result.size, samples: result.samples };
+      return { uri: result.uri, name: result.name, size: result.size, bitrate: result.bitrate, volume: result.volume };
     },
     async shareProject(project) {
       if (!project.exported || !project.exported.uri) throw new Error('No hay un archivo M4A exportado.');
@@ -803,7 +805,7 @@ function renderExport() {
   $('#ex-format').onclick = e => { const b = e.target.closest('button'); if (!b) return; state.format = b.dataset.f; renderExport(); };
   segmented($('#ex-quality'), QUALITIES, state.quality, v => { state.quality = v; renderExport(); });
   const len = p.duration ? p.trimEnd - p.trimStart : 0, src = (p.visual ? p.visual.size : 0) + (p.audio ? p.audio.size : 0);
-  $('#ex-info').innerHTML = infoList([['Formato', state.format.toUpperCase()], ['Duración final', len ? fmtTime(len) : 'Imagen estática'], ['Tamaño de origen', fmtSize(src)], ['Tamaño final', p.exported ? fmtSize(p.exported.size) : 'Se calcula al exportar'], ['Volumen', Math.round(p.volume * 100) + '%']]);
+  $('#ex-info').innerHTML = infoList([['Formato', state.format.toUpperCase()], ['Duración final', len ? fmtTime(len) : 'Imagen estática'], ['Tamaño de origen', fmtSize(src)], ['Tamaño final', p.exported ? fmtSize(p.exported.size) : 'Se calcula al exportar'], ['Volumen aplicado', Math.round(p.volume * 100) + '%'], ['Calidad', state.quality === 'standard' ? 'Estándar · 96 kbps' : state.quality === 'max' ? 'Máxima · 256 kbps' : 'Alta · 160 kbps']]);
 }
 function setProgress(v) { const bar = $('#ex-progress'); bar.hidden = v == null; if (v != null) $('i', bar).style.width = Math.round(v * 100) + '%'; }
 window.DCPI.setProgress = setProgress;
@@ -813,7 +815,7 @@ $('#btn-export').onclick = async () => {
   document.dispatchEvent(new CustomEvent('dcpi:export', { detail: { project: p, options: opts } }));
   if (!eng || !eng.exportProject) return toast('Motor de exportación no conectado todavía', 'err');
   const btn = $('#btn-export'); btn.disabled = true; setProgress(0);
-  try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); await persistProject(p); toast('Audio M4A exportado'); renderExport(); }
+  try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); await persistProject(p); toast('Audio M4A procesado y exportado'); renderExport(); }
   catch (err) { toast(err && err.message ? err.message : 'No se pudo exportar el audio M4A', 'err'); }
   finally { btn.disabled = false; setTimeout(() => setProgress(null), 600); }
 };
