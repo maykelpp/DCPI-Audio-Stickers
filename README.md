@@ -2,7 +2,7 @@
 
 Aplicación Android local para preparar proyectos multimedia y estudiar la compatibilidad de stickers con audio.
 
-## Estado actual — Fase 5 en implementación (0.5.0-alpha1)
+## Estado actual — Fase 6 en implementación (0.6.0-alpha1)
 
 - Interfaz HTML empaquetada en Android WebView.
 - Puente JavaScript/Kotlin y selector de archivos Android.
@@ -20,6 +20,9 @@ Aplicación Android local para preparar proyectos multimedia y estudiar la compa
 - Guardado de resultados en Descargas/DCPI Audio Stickers.
 - Compartir archivos M4A y MP4 mediante el menú nativo de Android.
 - Biblioteca con búsqueda por nombre, archivo y formato; filtros de proyectos y exportaciones.
+- La forma de onda no inventa datos: aparece vacía hasta analizar el audio real.
+- Filtros de biblioteca corregidos y estado del motor actualizado para M4A/MP4.
+- CI comprueba la sintaxis JavaScript del WebView antes de compilar el APK.
 - Exportación MP4 conectada desde la interfaz al puente Android; el selector de calidad modifica el bitrate de audio AAC, no la calidad de vídeo.
 - Forma de onda analizada en WebAudio para archivos compatibles.
 - Manejo más seguro cuando el códec no declara tamaño máximo de entrada.
