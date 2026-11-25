@@ -131,7 +131,7 @@ class MainActivity : ComponentActivity() {
             .put("android", android.os.Build.VERSION.RELEASE)
             .put("sdk", android.os.Build.VERSION.SDK_INT)
             .put("bridge", "connected")
-            .put("mediaEngine", "m4a-extract-trim")
+            .put("mediaEngine", "media3-aac-trim-gain")
             .toString()
 
         @JavascriptInterface
@@ -155,11 +155,11 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
-        fun exportM4a(projectId: String, sourceKind: String, startMs: Long, endMs: Long, projectName: String): String {
+        fun exportM4a(projectId: String, sourceKind: String, startMs: Long, endMs: Long, projectName: String, volume: Float, quality: String): String {
             val source = projectUris["$projectId:$sourceKind"] ?: return JSONObject()
                 .put("error", "Este proyecto no tiene guardado su archivo de origen. Vuelve a importarlo para exportar.").toString()
             return try {
-                mediaEngine.exportM4a(source, startMs, endMs, projectName).toString()
+                mediaEngine.exportM4a(source, startMs, endMs, projectName, volume.coerceIn(0f, 1f), quality).toString()
             } catch (e: Exception) {
                 JSONObject().put("error", e.message ?: "Error al exportar").toString()
             }
