@@ -606,7 +606,7 @@ function renderEditor() {
   const rows = [['Nombre', p.name]];
   if (p.visual) rows.push([p.visual.kind === 'image' ? 'Imagen' : 'Vídeo', `${p.visual.type} · ${fmtSize(p.visual.size)}`]);
   if (p.audio) rows.push(['Audio', `${p.audio.type || 'audio'} · ${fmtSize(p.audio.size)}`]);
-  rows.push(['Duración', p.duration ? fmtTime(p.duration) : 'Sin pista temporal'], ['Onda de audio', p.audio ? (p.peaks ? 'Real' : 'Referencia visual (pendiente del motor)') : 'Sin audio']);
+  rows.push(['Duración', p.duration ? fmtTime(p.duration) : 'Sin pista temporal'], ['Onda de audio', p.audio ? (p.peaks ? 'Analizada' : 'Pendiente de analizar') : 'Sin audio']);
   $('#ed-info').innerHTML = infoList(rows);
   requestAnimationFrame(layoutTrim);
 }
@@ -692,7 +692,7 @@ function renderExport() {
   const p = state.current; if (!p) return;
   $('#ex-sub').textContent = p.name;
   $('#ex-preview').innerHTML = p.visual ? (p.visual.kind === 'image' ? `<img src="${p.visual.url}" alt="">` : `<video src="${p.visual.url}#t=0.1" muted playsinline preload="metadata"></video>`) : `<div class="ph">${icon('audio')}<span>Sticker solo de audio</span></div>`;
-  const usable = FORMATS.filter(f => f.id === 'm4a' ? !!(p.audio || (p.visual && p.visual.kind === 'video')) : true);
+  const usable = FORMATS.filter(f => f.id === 'm4a' && !!(p.audio || (p.visual && p.visual.kind === 'video')));
   if (!usable.some(f => f.id === state.format)) state.format = usable[0].id;
   $('#ex-format').innerHTML = usable.map(f => `<button data-f="${f.id}" class="${f.id === state.format ? 'active' : ''}">${f.label}<small>${f.note}</small></button>`).join('');
   $('#ex-format').onclick = e => { const b = e.target.closest('button'); if (!b) return; state.format = b.dataset.f; renderExport(); };
