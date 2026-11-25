@@ -398,7 +398,52 @@ const settings = Object.assign({ theme: 'dark', quality: 'high' }, (() => { try 
 const state = { projects: [], draft: { image: null, video: null, audio: null }, current: null, filter: 'all', format: 'mp4', quality: settings.quality, view: 'home' };
 let media = null, slaveVideo = null, peaks = [];
 
+
 window.DCPI = window.DCPI || { engine: null, version: '1.0.0-ui' };
+
+if (window.DCPIAndroid) {
+  window.DCPI.engine = {
+    async exportProject(project, options, onProgress) {
+      if (options.format !== 'm4a') throw new Error('En esta fase solo está habilitada la exportación M4A.');
+      const sourceKind = project.audio ? 'audio' : (project.visual && project.visual.kind === 'video' ? 'video' : null);
+      if (!sourceKind) throw new Error('Añade un audio o un vídeo que contenga una pista de audio.');
+      if (onProgress) onProgress(0.15);
+      const raw = await new Promise(resolve => setTimeout(() =>
+        resolve(DCPIAndroid.exportM4a(
+          sourceKind,
+          Math.round(options.trimStart * 1000),
+          Math.round(options.trimEnd * 1000),
+          project.name || 'DCPI_Audio'
+        )), 0));
+      const result = JSON.parse(raw);
+      if (result.error) throw new Error(result.error);
+      if (onProgress) onProgress(1);
+      return { uri: result.uri, name: result.name, size: result.size, samples: result.samples };
+    },
+    async shareProject(project) {
+      if (!project.exported || !project.exported.uri) throw new Error('No hay un archivo M4A exportado.');
+      if (!DCPIAndroid.shareExport(project.exported.uri)) throw new Error('Android no pudo abrir el menú para compartir.');
+    },
+    async getWaveform(project) {
+      const file = project.audio && project.audio.file;
+      if (!file || !window.AudioContext) throw new Error('No hay audio local para analizar.');
+      if (file.size > 80 * 1024 * 1024) throw new Error('El archivo supera 80 MB; se omite el análisis de onda.');
+      const ctx = new AudioContext();
+      try {
+        const decoded = await ctx.decodeAudioData(await file.arrayBuffer());
+        const channel = decoded.getChannelData(0), count = 180, block = Math.max(1, Math.floor(channel.length / count));
+        const peaks = [];
+        for (let i = 0; i < count; i++) {
+          let peak = 0, from = i * block, to = Math.min(channel.length, from + block);
+          for (let j = from; j < to; j++) peak = Math.max(peak, Math.abs(channel[j]));
+          peaks.push(Math.max(0.04, peak));
+        }
+        return peaks;
+      } finally { await ctx.close(); }
+    }
+  };
+}
+
 
 /* ---------- Componentes reutilizables ---------- */
 function toast(msg, type = 'ok') {
