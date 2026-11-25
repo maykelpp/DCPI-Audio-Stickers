@@ -49,7 +49,11 @@ class MediaEngine(private val context: Context) {
             val startUs = startMs * 1000L
             val endUs = endMs * 1000L
             extractor.seekTo(startUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
-            val maxSize = audioFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE).coerceAtLeast(256 * 1024)
+            val maxSize = if (audioFormat.containsKey(MediaFormat.KEY_MAX_INPUT_SIZE)) {
+                audioFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE).coerceIn(256 * 1024, 16 * 1024 * 1024)
+            } else {
+                1024 * 1024
+            }
             val buffer = ByteBuffer.allocateDirect(maxSize)
             val info = MediaCodec.BufferInfo()
             var firstPts = -1L
