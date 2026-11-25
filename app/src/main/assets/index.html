@@ -495,29 +495,34 @@ window.DCPI = window.DCPI || { engine: null, version: '1.0.0-ui' };
 if (window.DCPIAndroid) {
   window.DCPI.engine = {
     async exportProject(project, options, onProgress) {
-      if (options.format !== 'm4a') throw new Error('En esta fase solo está habilitada la exportación M4A.');
+      if (!['m4a', 'mp4'].includes(options.format)) throw new Error('Formato no disponible todavía.');
       const sourceKind = project.audio ? 'audio' : (project.visual && project.visual.kind === 'video' ? 'video' : null);
-      if (!sourceKind) throw new Error('Añade un audio o un vídeo que contenga una pista de audio.');
-      if (onProgress) onProgress(0.15);
-      const raw = await new Promise(resolve => setTimeout(() =>
-        resolve(options.format === 'mp4'
-          ? DCPIAndroid.exportMp4(
-              project.id, Math.round(options.trimStart * 1000),
-              Math.round(options.trimEnd * 1000), project.name || 'DCPI_Video',
-              Number(options.volume), options.quality
-            )
-          : DCPIAndroid.exportM4a(
-              project.id, sourceKind, Math.round(options.trimStart * 1000),
-              Math.round(options.trimEnd * 1000), project.name || 'DCPI_Audio',
-              Number(options.volume), options.quality
-            )), 0));
+      if (options.format === 'm4a' && !sourceKind) throw new Error('Añade un audio o un vídeo que contenga una pista de audio.');
+      if (options.format === 'mp4' && !(project.visual && project.visual.kind === 'video')) throw new Error('Añade un vídeo para exportar en MP4.');
+      if (onProgress) onProgress(0.1);
+      const raw = await new Promise((resolve, reject) => setTimeout(() => {
+        try {
+          resolve(options.format === 'mp4'
+            ? DCPIAndroid.exportMp4(
+                project.id, Math.round(options.trimStart * 1000),
+                Math.round(options.trimEnd * 1000), project.name || 'DCPI_Video',
+                Number(options.volume), options.quality
+              )
+            : DCPIAndroid.exportM4a(
+                project.id, sourceKind, Math.round(options.trimStart * 1000),
+                Math.round(options.trimEnd * 1000), project.name || 'DCPI_Audio',
+                Number(options.volume), options.quality
+              ));
+        } catch (error) { reject(error); }
+      }, 0));
       const result = JSON.parse(raw);
       if (result.error) throw new Error(result.error);
+      if (!result.uri || !result.size) throw new Error('Android no devolvió un archivo exportado válido.');
       if (onProgress) onProgress(1);
       return { uri: result.uri, name: result.name, size: result.size, bitrate: result.bitrate, volume: result.volume };
     },
     async shareProject(project) {
-      if (!project.exported || !project.exported.uri) throw new Error('No hay un archivo M4A exportado.');
+      if (!project.exported || !project.exported.uri) throw new Error('Primero exporta el archivo.');
       if (!DCPIAndroid.shareExport(project.exported.uri, project.exported.format === 'mp4' ? 'video/mp4' : 'audio/mp4')) throw new Error('Android no pudo abrir el menú para compartir.');
     },
     async getWaveform(project) {
@@ -778,7 +783,7 @@ $('#btn-to-export').onclick = () => go('export');
 /* ---------- Biblioteca ---------- */
 function renderLibrary() {
   const list = state.projects.filter(p => state.filter === 'all' || (state.filter === 'sticker' ? p.exported : !p.exported)).reverse();
-  const msgs = { all: ['Tu biblioteca está vacía', 'Los proyectos guardados en este dispositivo aparecerán aquí.'], sticker: ['Aún no hay audios exportados', 'Los archivos M4A exportados aparecerán aquí.'], project: ['No hay proyectos guardados', 'Crea un proyecto para conservarlo en este dispositivo.'] };
+  const msgs = { all: ['Tu biblioteca está vacía', 'Los proyectos guardados en este dispositivo aparecerán aquí.'], sticker: ['Aún no hay audios exportados', 'Los archivos de audio exportados aparecerán aquí.'], project: ['No hay proyectos guardados', 'Crea un proyecto para conservarlo en este dispositivo.'] };
   $('#library').innerHTML = list.length ? `<div class="grid">${list.map(projectCard).join('')}</div>`
     : emptyState('lib', msgs[state.filter][0], msgs[state.filter][1], state.filter === 'all' ? { nav: 'create', label: 'Crear sticker' } : null);
 }
@@ -811,7 +816,7 @@ function renderExport() {
   $('#ex-format').onclick = e => { const b = e.target.closest('button'); if (!b) return; state.format = b.dataset.f; renderExport(); };
   segmented($('#ex-quality'), QUALITIES, state.quality, v => { state.quality = v; renderExport(); });
   const len = p.duration ? p.trimEnd - p.trimStart : 0, src = (p.visual ? p.visual.size : 0) + (p.audio ? p.audio.size : 0);
-  $('#ex-info').innerHTML = infoList([['Formato', state.format.toUpperCase()], ['Duración final', len ? fmtTime(len) : 'Imagen estática'], ['Tamaño de origen', fmtSize(src)], ['Tamaño final', p.exported ? fmtSize(p.exported.size) : 'Se calcula al exportar'], ['Volumen aplicado', Math.round(p.volume * 100) + '%'], ['Calidad', state.quality === 'standard' ? 'Estándar · 96 kbps' : state.quality === 'max' ? 'Máxima · 256 kbps' : 'Alta · 160 kbps']]);
+  $('#ex-info').innerHTML = infoList([['Formato', state.format.toUpperCase()], ['Duración final', len ? fmtTime(len) : 'Imagen estática'], ['Tamaño de origen', fmtSize(src)], ['Tamaño final', p.exported ? fmtSize(p.exported.size) : 'Se calcula al exportar'], ['Volumen aplicado', Math.round(p.volume * 100) + '%'], ['Calidad de audio', state.quality === 'standard' ? 'Estándar · 96 kbps' : state.quality === 'max' ? 'Máxima · 256 kbps' : 'Alta · 160 kbps']]);
 }
 function setProgress(v) { const bar = $('#ex-progress'); bar.hidden = v == null; if (v != null) $('i', bar).style.width = Math.round(v * 100) + '%'; }
 window.DCPI.setProgress = setProgress;
@@ -822,7 +827,7 @@ $('#btn-export').onclick = async () => {
   if (!eng || !eng.exportProject) return toast('Motor de exportación no conectado todavía', 'err');
   const btn = $('#btn-export'); btn.disabled = true; setProgress(0);
   try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); await persistProject(p); toast(state.format === 'mp4' ? 'Vídeo MP4 exportado' : 'Audio M4A procesado y exportado'); renderExport(); }
-  catch (err) { toast(err && err.message ? err.message : 'No se pudo exportar el audio M4A', 'err'); }
+  catch (err) { toast(err && err.message ? err.message : 'No se pudo exportar el archivo', 'err'); }
   finally { btn.disabled = false; setTimeout(() => setProgress(null), 600); }
 };
 $('#btn-share').onclick = async () => {
