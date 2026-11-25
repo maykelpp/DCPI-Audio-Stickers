@@ -583,7 +583,7 @@ document.addEventListener('click', e => {
 /* ---------- Inicio ---------- */
 function renderHome() {
   const total = state.projects.reduce((a, p) => a + (p.duration || 0), 0);
-  $('#stats').innerHTML = [[state.projects.length, 'Proyectos'], [state.projects.filter(p => p.exported).length, 'Stickers'], [fmtTime(total), 'Duración total']]
+  $('#stats').innerHTML = [[state.projects.length, 'Proyectos'], [state.projects.filter(p => p.exported).length, 'Audios M4A'], [fmtTime(total), 'Duración total']]
     .map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
   const recent = state.projects.slice(-4).reverse();
   $('#recent').innerHTML = recent.length ? `<div class="grid">${recent.map(projectCard).join('')}</div>`
