@@ -98,6 +98,7 @@ class MediaEngine(private val context: Context) {
         }
         failure.get()?.let { temp.delete(); throw IllegalStateException(it.message ?: "No se pudo procesar el vídeo", it) }
         require(temp.exists() && temp.length() > 0L) { "El motor no generó el vídeo de salida" }
+        val outputSize = temp.length()
         val safeName = displayName.replace(Regex("[^A-Za-z0-9._-]"), "_")
             .ifBlank { "dcpi_video" }.removeSuffix(".mp4") + ".mp4"
         val values = ContentValues().apply {
@@ -123,7 +124,7 @@ class MediaEngine(private val context: Context) {
             context.contentResolver.delete(outUri, null, null); throw e
         } finally { temp.delete() }
         return JSONObject().put("uri", outUri.toString()).put("name", safeName)
-            .put("size", temp.length()).put("format", "mp4").put("bitrate", bitrate).put("volume", volume)
+            .put("size", outputSize).put("format", "mp4").put("bitrate", bitrate).put("volume", volume)
     }
 
     fun exportM4a(
