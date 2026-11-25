@@ -2,7 +2,7 @@
 
 Aplicación Android local para preparar proyectos multimedia y estudiar la compatibilidad de stickers con audio.
 
-## Estado actual — Fase 6 en implementación (0.6.0-alpha1)
+## Estado actual — Fase 7: candidato beta (0.7.0-beta1)
 
 - Interfaz HTML empaquetada en Android WebView.
 - Puente JavaScript/Kotlin y selector de archivos Android.
@@ -23,6 +23,8 @@ Aplicación Android local para preparar proyectos multimedia y estudiar la compa
 - La forma de onda no inventa datos: aparece vacía hasta analizar el audio real.
 - Filtros de biblioteca corregidos y estado del motor actualizado para M4A/MP4.
 - CI comprueba la sintaxis JavaScript del WebView antes de compilar el APK.
+- Se retiró WebM del selector porque todavía no existe un motor de exportación para ese formato.
+- La pantalla de exportación explica las diferencias entre M4A y MP4 y qué controla la calidad AAC.
 - Exportación MP4 conectada desde la interfaz al puente Android; el selector de calidad modifica el bitrate de audio AAC, no la calidad de vídeo.
 - Forma de onda analizada en WebAudio para archivos compatibles.
 - Manejo más seguro cuando el códec no declara tamaño máximo de entrada.
