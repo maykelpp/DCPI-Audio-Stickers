@@ -322,9 +322,10 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         <div class="panel">
           <h3>Formato de salida</h3>
           <div class="choice" id="ex-format"></div>
+          <p class="muted" id="ex-format-note">M4A exporta únicamente la pista de audio seleccionada.</p>
           <h3>Calidad</h3>
           <div class="seg" id="ex-quality"></div>
-          <p class="muted" style="margin-top:8px">El audio se procesa y recodifica a AAC: el recorte, el volumen y la calidad seleccionada se aplican al archivo final. La exportación audiovisual de vídeo todavía no está disponible.</p>
+          <p class="muted" style="margin-top:8px">El recorte y el volumen se aplican al archivo final. La calidad seleccionada controla el bitrate de audio AAC, no la calidad de imagen del vídeo.</p>
           <dl class="info" id="ex-info"></dl>
           <div class="actions two">
             <button class="btn btn-primary btn-lg" id="btn-export"><svg class="ic"><use href="#i-export"/></svg>Exportar</button>
