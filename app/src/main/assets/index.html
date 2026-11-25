@@ -789,7 +789,7 @@ function renderLibrary() {
     : query ? emptyState('search', 'Sin resultados', 'No hay proyectos que coincidan con esa búsqueda.')
     : emptyState('lib', msgs[state.filter][0], msgs[state.filter][1], state.filter === 'all' ? { nav: 'create', label: 'Crear proyecto' } : null);
 }
-$('.tab').forEach(t => t.onclick = () => { state.filter = t.dataset.filter; $('.tab').forEach(x => x.classList.toggle('active', x === t)); renderLibrary(); });
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { state.filter = t.dataset.filter; document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t)); renderLibrary(); }));
 $('#library-search').addEventListener('input', renderLibrary);
 function deleteProject(id) {
   const p = state.projects.find(x => x.id === id); if (!p) return;
