@@ -14,6 +14,8 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.audio.DefaultGainProvider
 import androidx.media3.common.audio.GainProcessor
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.transformer.AudioEncoderSettings
+import androidx.media3.transformer.DefaultEncoderFactory
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.Effects
@@ -90,9 +92,12 @@ class MediaEngine(private val context: Context) {
 
         Handler(Looper.getMainLooper()).post {
             try {
+                val encoderFactory = DefaultEncoderFactory.Builder(context)
+                    .setRequestedAudioEncoderSettings(AudioEncoderSettings.Builder().setBitrate(bitrate).build())
+                    .build()
                 val transformer = Transformer.Builder(context)
+                    .setEncoderFactory(encoderFactory)
                     .setAudioMimeType(MimeTypes.AUDIO_AAC)
-                    .setAudioBitrate(bitrate)
                     .build()
                 transformerRef.set(transformer)
                 transformer.addListener(object : Transformer.Listener {
