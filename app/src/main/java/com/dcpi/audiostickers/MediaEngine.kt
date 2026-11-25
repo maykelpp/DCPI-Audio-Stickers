@@ -2,6 +2,7 @@ package com.dcpi.audiostickers
 
 import android.content.ContentValues
 import android.content.Context
+import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
@@ -50,7 +51,7 @@ class MediaEngine(private val context: Context) {
             extractor.seekTo(startUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
             val maxSize = audioFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE).coerceAtLeast(256 * 1024)
             val buffer = ByteBuffer.allocateDirect(maxSize)
-            val info = MediaMuxer.BufferInfo()
+            val info = MediaCodec.BufferInfo()
             var firstPts = -1L
             var written = 0
             while (true) {
