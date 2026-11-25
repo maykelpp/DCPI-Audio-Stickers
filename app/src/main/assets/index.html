@@ -301,10 +301,10 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
     <!-- 4. BIBLIOTECA -->
     <section class="view" id="view-library" data-title="Biblioteca">
-      <header class="page-head"><h1>Biblioteca</h1><p>Stickers creados y proyectos guardados.</p></header>
+      <header class="page-head"><h1>Biblioteca</h1><p>Proyectos y archivos de audio M4A exportados.</p></header>
       <div class="tabs" role="tablist">
         <button class="tab active" data-filter="all" role="tab">Todo</button>
-        <button class="tab" data-filter="sticker" role="tab">Stickers</button>
+        <button class="tab" data-filter="sticker" role="tab">Exportados M4A</button>
         <button class="tab" data-filter="project" role="tab">Proyectos</button>
       </div>
       <div id="library"></div>
@@ -323,6 +323,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
           <div class="choice" id="ex-format"></div>
           <h3>Calidad</h3>
           <div class="seg" id="ex-quality"></div>
+          <p class="muted" style="margin-top:8px">En esta versión, la selección de calidad es informativa: el M4A conserva el audio original sin recodificar.</p>
           <dl class="info" id="ex-info"></dl>
           <div class="actions two">
             <button class="btn btn-primary btn-lg" id="btn-export"><svg class="ic"><use href="#i-export"/></svg>Exportar</button>
@@ -474,7 +475,7 @@ function thumbHTML(p) {
 }
 function projectCard(p) {
   return `<article class="card" data-id="${p.id}">${thumbHTML(p)}
-    <div class="card-body"><h4>${esc(p.name)}</h4><p class="muted">${p.exported ? 'Sticker · ' + p.exported.format.toUpperCase() : 'Proyecto guardado'}</p></div>
+    <div class="card-body"><h4>${esc(p.name)}</h4><p class="muted">${p.exported ? 'Audio exportado · ' + p.exported.format.toUpperCase() : 'Proyecto en esta sesión'}</p></div>
     <div class="card-foot"><button class="btn btn-outline btn-sm" data-open="${p.id}">${icon('open')}Abrir</button><button class="btn btn-ghost btn-sm" data-del="${p.id}">${icon('trash')}Eliminar</button></div></article>`;
 }
 
@@ -672,7 +673,7 @@ $('#btn-to-export').onclick = () => go('export');
 /* ---------- Biblioteca ---------- */
 function renderLibrary() {
   const list = state.projects.filter(p => state.filter === 'all' || (state.filter === 'sticker' ? p.exported : !p.exported)).reverse();
-  const msgs = { all: ['Tu biblioteca está vacía', 'Los proyectos y stickers que crees aparecerán aquí.'], sticker: ['Aún no has exportado stickers', 'Exporta un proyecto desde el editor.'], project: ['No hay proyectos pendientes', 'Los proyectos sin exportar aparecerán aquí.'] };
+  const msgs = { all: ['Tu biblioteca está vacía', 'Los proyectos creados durante esta sesión aparecerán aquí.'], sticker: ['Aún no hay audios exportados', 'Los archivos M4A que exportes aparecerán aquí durante esta sesión.'], project: ['No hay proyectos en esta sesión', 'Crea un proyecto para verlo aquí.'] };
   $('#library').innerHTML = list.length ? `<div class="grid">${list.map(projectCard).join('')}</div>`
     : emptyState('lib', msgs[state.filter][0], msgs[state.filter][1], state.filter === 'all' ? { nav: 'create', label: 'Crear sticker' } : null);
 }
@@ -708,8 +709,8 @@ $('#btn-export').onclick = async () => {
   document.dispatchEvent(new CustomEvent('dcpi:export', { detail: { project: p, options: opts } }));
   if (!eng || !eng.exportProject) return toast('Motor de exportación no conectado todavía', 'err');
   const btn = $('#btn-export'); btn.disabled = true; setProgress(0);
-  try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); toast('Sticker exportado'); renderExport(); }
-  catch (err) { toast('No se pudo exportar el sticker', 'err'); }
+  try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); toast('Audio M4A exportado'); renderExport(); }
+  catch (err) { toast(err && err.message ? err.message : 'No se pudo exportar el audio M4A', 'err'); }
   finally { btn.disabled = false; setTimeout(() => setProgress(null), 600); }
 };
 $('#btn-share').onclick = async () => {
