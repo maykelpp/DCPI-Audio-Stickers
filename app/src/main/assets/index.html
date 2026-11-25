@@ -390,7 +390,6 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 const FORMATS = [
   { id: 'mp4', label: 'MP4', note: 'Vídeo + audio' },
-  { id: 'webm', label: 'WebM', note: 'Vídeo + audio' },
   { id: 'm4a', label: 'M4A', note: 'Solo audio' }
 ];
 const QUALITIES = [{ id: 'standard', label: 'Estándar' }, { id: 'high', label: 'Alta' }, { id: 'max', label: 'Máxima' }];
@@ -817,6 +816,8 @@ function renderExport() {
   if (!usable.some(f => f.id === state.format)) state.format = usable[0].id;
   $('#ex-format').innerHTML = usable.map(f => `<button data-f="${f.id}" class="${f.id === state.format ? 'active' : ''}">${f.label}<small>${f.note}</small></button>`).join('');
   $('#ex-format').onclick = e => { const b = e.target.closest('button'); if (!b) return; state.format = b.dataset.f; renderExport(); };
+  const formatNote = $('#ex-format-note');
+  if (formatNote) formatNote.textContent = state.format === 'mp4' ? 'El MP4 conserva el audio que ya viene dentro del vídeo. No mezcla el audio importado por separado.' : 'M4A exporta únicamente la pista de audio seleccionada.';
   segmented($('#ex-quality'), QUALITIES, state.quality, v => { state.quality = v; renderExport(); });
   const len = p.duration ? p.trimEnd - p.trimStart : 0, src = (p.visual ? p.visual.size : 0) + (p.audio ? p.audio.size : 0);
   $('#ex-info').innerHTML = infoList([['Formato', state.format.toUpperCase()], ['Duración final', len ? fmtTime(len) : 'Imagen estática'], ['Tamaño de origen', fmtSize(src)], ['Tamaño final', p.exported ? fmtSize(p.exported.size) : 'Se calcula al exportar'], ['Volumen aplicado', Math.round(p.volume * 100) + '%'], ['Calidad de audio', state.quality === 'standard' ? 'Estándar · 96 kbps' : state.quality === 'max' ? 'Máxima · 256 kbps' : 'Alta · 160 kbps']]);
