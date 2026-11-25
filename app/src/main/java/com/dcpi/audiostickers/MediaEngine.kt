@@ -11,8 +11,10 @@ import android.os.Looper
 import android.provider.MediaStore
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
-import androidx.media3.common.audio.DefaultGainProvider
-import androidx.media3.common.audio.GainProcessor
+import androidx.media3.common.C
+import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.common.audio.BaseAudioProcessor
+import androidx.media3.common.audio.ToInt16PcmAudioProcessor
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.transformer.AudioEncoderSettings
 import androidx.media3.transformer.DefaultEncoderFactory
@@ -25,9 +27,32 @@ import androidx.media3.transformer.Transformer
 import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import kotlin.math.roundToInt
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+
+@OptIn(UnstableApi::class)
+private class PcmVolumeProcessor(private val gain: Float) : BaseAudioProcessor() {
+    override fun onConfigure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat =
+        inputAudioFormat
+
+    override fun queueInput(inputBuffer: ByteBuffer) {
+        val bytes = inputBuffer.remaining()
+        if (bytes == 0) return
+        val output = replaceOutputBuffer(bytes).order(ByteOrder.LITTLE_ENDIAN)
+        val input = inputBuffer.duplicate().order(ByteOrder.LITTLE_ENDIAN)
+        while (input.remaining() >= 2) {
+            val sample = input.short.toInt()
+            val scaled = (sample * gain).roundToInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt())
+            output.putShort(scaled.toShort())
+        }
+        inputBuffer.position(inputBuffer.limit())
+        output.flip()
+    }
+}
 
 /**
  * Phase 4 audio pipeline: Media3 decodes the source, applies gain, trims and encodes AAC.
@@ -69,7 +94,7 @@ class MediaEngine(private val context: Context) {
             .setClippingConfiguration(MediaItem.ClippingConfiguration.Builder()
                 .setStartPositionMs(startMs).setEndPositionMs(endMs).build()).build()
         val editedItem = EditedMediaItem.Builder(mediaItem)
-            .setEffects(Effects(listOf(GainProcessor(DefaultGainProvider.Builder(volume).build())), emptyList()))
+            .setEffects(Effects(listOf(ToInt16PcmAudioProcessor(), PcmVolumeProcessor(volume)), emptyList()))
             .build()
         Handler(Looper.getMainLooper()).post {
             try {
