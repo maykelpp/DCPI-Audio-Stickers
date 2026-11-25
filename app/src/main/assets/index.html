@@ -301,12 +301,13 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
     <!-- 4. BIBLIOTECA -->
     <section class="view" id="view-library" data-title="Biblioteca">
-      <header class="page-head"><h1>Biblioteca</h1><p>Proyectos y archivos de audio M4A exportados.</p></header>
+      <header class="page-head"><h1>Biblioteca</h1><p>Proyectos, audios y vídeos exportados en este dispositivo.</p></header>
       <div class="tabs" role="tablist">
         <button class="tab active" data-filter="all" role="tab">Todo</button>
-        <button class="tab" data-filter="sticker" role="tab">Exportados M4A</button>
+        <button class="tab" data-filter="sticker" role="tab">Exportados</button>
         <button class="tab" data-filter="project" role="tab">Proyectos</button>
       </div>
+      <div class="field" style="margin:14px 0"><input id="library-search" type="search" placeholder="Buscar por nombre o formato" aria-label="Buscar en la biblioteca"></div>
       <div id="library"></div>
     </section>
 
@@ -490,7 +491,7 @@ async function restoreProjects() {
 }
 
 
-window.DCPI = window.DCPI || { engine: null, version: '1.0.0-ui' };
+window.DCPI = window.DCPI || { engine: null, version: '0.5.0' };
 
 if (window.DCPIAndroid) {
   window.DCPI.engine = {
@@ -782,12 +783,17 @@ $('#btn-to-export').onclick = () => go('export');
 
 /* ---------- Biblioteca ---------- */
 function renderLibrary() {
-  const list = state.projects.filter(p => state.filter === 'all' || (state.filter === 'sticker' ? p.exported : !p.exported)).reverse();
-  const msgs = { all: ['Tu biblioteca está vacía', 'Los proyectos guardados en este dispositivo aparecerán aquí.'], sticker: ['Aún no hay audios exportados', 'Los archivos de audio exportados aparecerán aquí.'], project: ['No hay proyectos guardados', 'Crea un proyecto para conservarlo en este dispositivo.'] };
+  const query = ($('#library-search')?.value || '').trim().toLocaleLowerCase();
+  const filtered = state.projects.filter(p => state.filter === 'all' || (state.filter === 'sticker' ? !!p.exported : !p.exported));
+  const list = filtered.filter(p => !query || [p.name, p.exported?.format, p.visual?.name, p.audio?.name].some(v => String(v || '').toLocaleLowerCase().includes(query)))
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const msgs = { all: ['Tu biblioteca está vacía', 'Los proyectos guardados en este dispositivo aparecerán aquí.'], sticker: ['Aún no hay archivos exportados', 'Los archivos M4A y MP4 exportados aparecerán aquí.'], project: ['No hay proyectos guardados', 'Crea un proyecto para conservarlo en este dispositivo.'] };
   $('#library').innerHTML = list.length ? `<div class="grid">${list.map(projectCard).join('')}</div>`
-    : emptyState('lib', msgs[state.filter][0], msgs[state.filter][1], state.filter === 'all' ? { nav: 'create', label: 'Crear sticker' } : null);
+    : query ? emptyState('search', 'Sin resultados', 'No hay proyectos que coincidan con esa búsqueda.')
+    : emptyState('lib', msgs[state.filter][0], msgs[state.filter][1], state.filter === 'all' ? { nav: 'create', label: 'Crear proyecto' } : null);
 }
-$$('.tab').forEach(t => t.onclick = () => { state.filter = t.dataset.filter; $$('.tab').forEach(x => x.classList.toggle('active', x === t)); renderLibrary(); });
+$('.tab').forEach(t => t.onclick = () => { state.filter = t.dataset.filter; $('.tab').forEach(x => x.classList.toggle('active', x === t)); renderLibrary(); });
+$('#library-search').addEventListener('input', renderLibrary);
 function deleteProject(id) {
   const p = state.projects.find(x => x.id === id); if (!p) return;
   confirmDialog('¿Eliminar proyecto?', `“${p.name}” se quitará de la biblioteca. Esta acción no se puede deshacer.`, () => {
