@@ -576,7 +576,7 @@ function thumbHTML(p) {
 }
 function projectCard(p) {
   return `<article class="card" data-id="${p.id}">${thumbHTML(p)}
-    <div class="card-body"><h4>${esc(p.name)}</h4><p class="muted">${p.incomplete ? 'Faltan archivos de origen' : p.exported ? 'Audio exportado · ' + p.exported.format.toUpperCase() : 'Guardado en este dispositivo'}</p></div>
+    <div class="card-body"><h4>${esc(p.name)}</h4><p class="muted">${p.incomplete ? 'Faltan archivos de origen' : p.exported ? 'Archivo exportado · ' + p.exported.format.toUpperCase() : 'Guardado en este dispositivo'}</p></div>
     <div class="card-foot"><button class="btn btn-outline btn-sm" data-open="${p.id}">${icon('open')}Abrir</button><button class="btn btn-ghost btn-sm" data-del="${p.id}">${icon('trash')}Eliminar</button></div></article>`;
 }
 
@@ -832,7 +832,7 @@ $('#btn-export').onclick = async () => {
   document.dispatchEvent(new CustomEvent('dcpi:export', { detail: { project: p, options: opts } }));
   if (!eng || !eng.exportProject) return toast('Motor de exportación no conectado todavía', 'err');
   const btn = $('#btn-export'); btn.disabled = true; setProgress(0);
-  try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); await persistProject(p); toast(state.format === 'mp4' ? 'Vídeo MP4 exportado' : 'Audio M4A procesado y exportado'); renderExport(); }
+  try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); await persistProject(p); toast(state.format === 'mp4' ? 'Vídeo MP4 exportado' : 'Audio M4A exportado'); renderExport(); }
   catch (err) { toast(err && err.message ? err.message : 'No se pudo exportar el archivo', 'err'); }
   finally { btn.disabled = false; setTimeout(() => setProgress(null), 600); }
 };
