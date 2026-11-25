@@ -11,8 +11,8 @@ android {
         applicationId = "com.dcpi.audiostickers"
         minSdk = 29
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.3.0"
+        versionCode = 5
+        versionName = "0.4.0-alpha1"
     }
 
     compileOptions {
@@ -25,4 +25,6 @@ android {
 
 dependencies {
     implementation("androidx.activity:activity-ktx:1.9.3")
+    implementation("androidx.media3:media3-transformer:1.5.1")
+    implementation("androidx.media3:media3-common:1.5.1")
 }
