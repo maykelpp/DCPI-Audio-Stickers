@@ -16,6 +16,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+      - name: Set up Node.js for WebView syntax checks
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check embedded WebView JavaScript
+        run: python3 scripts/check_web.py
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon
       - name: Upload APK
