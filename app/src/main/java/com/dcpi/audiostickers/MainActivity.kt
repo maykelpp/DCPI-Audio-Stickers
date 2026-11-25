@@ -33,7 +33,26 @@ class MainActivity : ComponentActivity() {
             settings.allowFileAccessFromFileURLs = false
             settings.allowUniversalAccessFromFileURLs = false
             addJavascriptInterface(AndroidBridge(), "DCPIAndroid")
-            webViewClient = WebViewClient()
+            webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    view?.evaluateJavascript(
+                        """
+                        (function() {
+                          try {
+                            const info = JSON.parse(DCPIAndroid.getPlatformInfo());
+                            window.DCPI = window.DCPI || {};
+                            window.DCPI.nativeBridge = info;
+                            const status = document.getElementById('engine-state');
+                            if (status) status.textContent = 'Android conectado · motor multimedia pendiente';
+                            const version = document.getElementById('app-ver');
+                            if (version) version.textContent = info.version;
+                          } catch (e) { console.error('DCPI bridge:', e); }
+                        })();
+                        """.trimIndent(), null
+                    )
+                }
+            }
             webChromeClient = object : WebChromeClient() {
                 override fun onShowFileChooser(
                     view: WebView?,
