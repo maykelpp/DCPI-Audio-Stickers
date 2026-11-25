@@ -200,7 +200,7 @@ class MediaEngine(private val context: Context) {
             .setRemoveVideo(true)
             .setEffects(
                 Effects(
-                    listOf(GainProcessor(DefaultGainProvider.Builder(volume).build())),
+                    listOf(ToInt16PcmAudioProcessor(), PcmVolumeProcessor(volume)),
                     emptyList()
                 )
             )
