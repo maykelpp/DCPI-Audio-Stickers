@@ -15,8 +15,8 @@ Aplicación Android local para preparar proyectos multimedia y estudiar la compa
 - Eliminación de proyectos y sus medios almacenados.
 - Persistencia de los permisos URI de los archivos seleccionados para que el motor nativo pueda volver a acceder al origen después de reiniciar la app.
 - Extracción de la pista de audio desde archivos de audio o vídeo.
-- Recorte de audio con Media3 Transformer.
-- Exportación M4A recodificada a AAC con aplicación del volumen elegido y perfiles de calidad solicitados (96, 160 y 256 kbps; el codificador del dispositivo puede ajustar la tasa final).
+- Recorte y exportación M4A con Media3 Transformer, recodificación AAC, volumen aplicado al archivo y perfiles de calidad solicitados (96, 160 y 256 kbps; el codificador puede ajustar la tasa final).
+- Exportación MP4 desde un vídeo importado, con recorte, vídeo H.264 y audio AAC cuando el origen contiene audio; el volumen se aplica a esa pista.
 - Guardado de resultados en Descargas/DCPI Audio Stickers.
 - Compartir M4A mediante el menú nativo de Android.
 - Forma de onda analizada en WebAudio para archivos compatibles.
@@ -29,7 +29,7 @@ Aplicación Android local para preparar proyectos multimedia y estudiar la compa
 - La exportación audiovisual MP4/WebM todavía no está implementada; el motor de esta fase genera solo audio M4A.
 - El procesamiento AAC depende de los decodificadores y codificadores disponibles en Android y debe probarse con distintos formatos.
 - La persistencia de IndexedDB requiere validación final en dispositivo con archivos grandes y después de cerrar/abrir la app; el build de CI no sustituye esa prueba.
-- Compatibilidad de códecs, calidad, ganancia, recortes y uso de memoria debe probarse en dispositivo con distintos formatos y fabricantes.
+- Compatibilidad de códecs, calidad, ganancia, recortes, sincronización, duración y uso de memoria debe probarse en dispositivo con distintos formatos y fabricantes.
 - No se afirma compatibilidad con el sistema de stickers sonoros de WhatsApp hasta disponer de un formato documentado y una prueba real.
 
 ## Compilar
