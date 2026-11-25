@@ -396,8 +396,76 @@ const QUALITIES = [{ id: 'standard', label: 'Estándar' }, { id: 'high', label: 
 const THEMES = [{ id: 'dark', label: 'Oscuro' }, { id: 'oled', label: 'Negro OLED' }];
 
 const settings = Object.assign({ theme: 'dark', quality: 'high' }, (() => { try { return JSON.parse(localStorage.getItem('dcpi-settings')) || {}; } catch { return {}; } })());
-const state = { projects: [], draft: { image: null, video: null, audio: null }, current: null, filter: 'all', format: 'mp4', quality: settings.quality, view: 'home' };
+const state = { projects: [], draft: { image: null, video: null, audio: null }, current: null, filter: 'all', format: 'm4a', quality: settings.quality, view: 'home' };
 let media = null, slaveVideo = null, peaks = [];
+let dbPromise, saveTimers = new Map();
+function openProjectDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open('dcpi-audio-stickers', 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('projects')) db.createObjectStore('projects', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('media')) db.createObjectStore('media', { keyPath: 'key' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('No se pudo abrir la biblioteca local'));
+  });
+  return dbPromise;
+}
+async function dbRequest(store, mode, action) {
+  const db = await openProjectDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, mode), req = action(tx.objectStore(store));
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('Error en la biblioteca local'));
+    tx.onabort = () => reject(tx.error || new Error('No se pudo guardar la biblioteca'));
+  });
+}
+function mediaRecord(projectId, slot, item) {
+  return item ? { key: projectId + ':' + slot, blob: item.file, name: item.name, type: item.type, size: item.size, duration: item.duration || 0 } : null;
+}
+async function persistProject(p) {
+  if (!p) return;
+  const record = { id:p.id, name:p.name, createdAt:p.createdAt, duration:p.duration, trimStart:p.trimStart, trimEnd:p.trimEnd, volume:p.volume, exported:p.exported || null,
+    visualKind:p.visual && p.visual.kind || null, visualKey:p.visual ? p.id + ':visual' : null, audioKey:p.audio ? p.id + ':audio' : null, peaks:p.peaks || null };
+  const db = await openProjectDB();
+  await new Promise((resolve,reject) => {
+    const tx = db.transaction(['projects','media'], 'readwrite');
+    const projects = tx.objectStore('projects'), mediaStore = tx.objectStore('media');
+    projects.put(record);
+    const visual = mediaRecord(p.id,'visual',p.visual), audio = mediaRecord(p.id,'audio',p.audio);
+    if (visual) mediaStore.put(visual); else mediaStore.delete(p.id + ':visual');
+    if (audio) mediaStore.put(audio); else mediaStore.delete(p.id + ':audio');
+    tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error || new Error('No se pudo guardar el proyecto'));
+  });
+}
+function scheduleSave(p) {
+  if (!p) return;
+  clearTimeout(saveTimers.get(p.id));
+  saveTimers.set(p.id, setTimeout(() => persistProject(p).catch(e => toast(e.message || 'No se pudo guardar el proyecto', 'err')), 350));
+}
+async function restoreProjects() {
+  try {
+    const records = await dbRequest('projects','readonly',s => s.getAll());
+    const db = await openProjectDB();
+    const mediaRows = await new Promise((resolve,reject) => {
+      const tx=db.transaction('media','readonly'), req=tx.objectStore('media').getAll();
+      req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+    });
+    const mediaMap = new Map(mediaRows.map(x => [x.key,x]));
+    for (const r of records.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0))) {
+      const make = row => row ? { kind: row.key.endsWith(':visual') ? r.visualKind : 'audio', file: new File([row.blob],row.name,{type:row.type}), url: URL.createObjectURL(row.blob), name:row.name, size:row.size, type:row.type, duration:row.duration||0 } : null;
+      const visualRow = r.visualKey && mediaMap.get(r.visualKey), audioRow = r.audioKey && mediaMap.get(r.audioKey);
+      const p = { id:r.id, name:r.name, createdAt:r.createdAt, duration:r.duration||0, trimStart:r.trimStart||0, trimEnd:r.trimEnd||r.duration||0, volume:r.volume==null?.8:r.volume, exported:r.exported||null, peaks:r.peaks||null,
+        visual:make(visualRow), audio:audioRow ? Object.assign(make(audioRow),{kind:'audio'}) : null };
+      state.projects.push(p);
+    }
+    renderHome();
+    if (state.view === 'library') renderLibrary();
+    return records.length;
+  } catch (e) { toast('No se pudo recuperar la biblioteca local: ' + (e.message || 'error'), 'err'); return 0; }
+}
 
 
 window.DCPI = window.DCPI || { engine: null, version: '1.0.0-ui' };
@@ -558,7 +626,7 @@ $('#btn-open-editor').onclick = () => {
     visual, audio, duration: main ? main.duration : 0, trimStart: 0, trimEnd: main ? main.duration : 0, volume: .8, exported: null
   };
   state.projects.push(p); state.draft = { image: null, video: null, audio: null }; renderSlots();
-  state.current = p; toast('Proyecto guardado en la biblioteca'); go('editor');
+  state.current = p; persistProject(p).then(() => toast('Proyecto guardado en este dispositivo')).catch(e => toast('No se pudo guardar: ' + e.message, 'err')); go('editor');
 };
 
 /* ---------- Editor ---------- */
@@ -600,7 +668,7 @@ function renderEditor() {
   ['b-play', 'b-back', 'b-fwd', 'b-set-in', 'b-set-out', 'b-reset'].forEach(i => $('#' + i).disabled = !has);
   $('#wave-wrap').style.opacity = has ? 1 : .4;
   peaks = p.peaks || seededPeaks(160, 7 + p.name.length * 13);
-  if (p.audio && window.DCPI.engine && window.DCPI.engine.getWaveform) window.DCPI.engine.getWaveform(p).then(r => { p.peaks = peaks = r; drawWave(); }).catch(() => {});
+  if (p.audio && window.DCPI.engine && window.DCPI.engine.getWaveform) window.DCPI.engine.getWaveform(p).then(r => { p.peaks = peaks = r; drawWave(); scheduleSave(p); }).catch(() => {});
   $('#vol').value = Math.round(p.volume * 100); setVol(p.volume * 100);
   $('#t-dur').textContent = fmtTime(p.duration); $('#t-cur').textContent = fmtTime(0); $('#playhead').style.left = '0%';
   setPlayIcon(false);
@@ -630,14 +698,14 @@ function togglePlay() {
 $('#b-play').onclick = togglePlay;
 $('#b-back').onclick = () => seek(media.currentTime - 5);
 $('#b-fwd').onclick = () => seek(media.currentTime + 5);
-$('#b-set-in').onclick = () => { const p = state.current; if (media.currentTime >= p.trimEnd - .2) return toast('El inicio debe ir antes del final', 'err'); p.trimStart = media.currentTime; layoutTrim(); toast('Inicio del recorte actualizado'); };
-$('#b-set-out').onclick = () => { const p = state.current; if (media.currentTime <= p.trimStart + .2) return toast('El final debe ir después del inicio', 'err'); p.trimEnd = media.currentTime; layoutTrim(); toast('Final del recorte actualizado'); };
-$('#b-reset').onclick = () => { const p = state.current; p.trimStart = 0; p.trimEnd = p.duration; layoutTrim(); toast('Recorte restablecido'); };
+$('#b-set-in').onclick = () => { const p = state.current; if (media.currentTime >= p.trimEnd - .2) return toast('El inicio debe ir antes del final', 'err'); p.trimStart = media.currentTime; layoutTrim(); scheduleSave(p); toast('Inicio del recorte actualizado'); };
+$('#b-set-out').onclick = () => { const p = state.current; if (media.currentTime <= p.trimStart + .2) return toast('El final debe ir después del inicio', 'err'); p.trimEnd = media.currentTime; layoutTrim(); scheduleSave(p); toast('Final del recorte actualizado'); };
+$('#b-reset').onclick = () => { const p = state.current; p.trimStart = 0; p.trimEnd = p.duration; layoutTrim(); scheduleSave(p); toast('Recorte restablecido'); };
 
 function setVol(v) {
   const p = state.current; $('#vol').style.setProperty('--v', v + '%'); $('#vol-out').textContent = Math.round(v) + '%';
   $('#b-mute').innerHTML = icon(v < 1 ? 'mute' : 'vol');
-  if (p) { p.volume = v / 100; if (media) media.volume = p.volume; }
+  if (p) { p.volume = v / 100; if (media) media.volume = p.volume; scheduleSave(p); }
 }
 $('#vol').oninput = e => setVol(+e.target.value);
 let lastVol = 80;
@@ -649,7 +717,7 @@ function bindHandle(el, which) {
   const move = x => {
     const p = state.current, r = wrap.getBoundingClientRect(), t = clamp((x - r.left) / r.width, 0, 1) * p.duration;
     if (which === 'start') p.trimStart = clamp(t, 0, p.trimEnd - .2); else p.trimEnd = clamp(t, p.trimStart + .2, p.duration);
-    layoutTrim();
+    layoutTrim(); scheduleSave(p);
   };
   el.addEventListener('pointerdown', e => {
     if (!state.current.duration) return; e.preventDefault(); el.setPointerCapture(e.pointerId);
@@ -659,7 +727,7 @@ function bindHandle(el, which) {
   el.addEventListener('keydown', e => {
     const p = state.current, d = e.key === 'ArrowRight' ? .1 : e.key === 'ArrowLeft' ? -.1 : 0; if (!d) return;
     if (which === 'start') p.trimStart = clamp(p.trimStart + d, 0, p.trimEnd - .2); else p.trimEnd = clamp(p.trimEnd + d, p.trimStart + .2, p.duration);
-    layoutTrim();
+    layoutTrim(); scheduleSave(p);
   });
 }
 bindHandle($('#h-start'), 'start'); bindHandle($('#h-end'), 'end');
@@ -683,6 +751,7 @@ function deleteProject(id) {
   confirmDialog('¿Eliminar proyecto?', `“${p.name}” se quitará de la biblioteca. Esta acción no se puede deshacer.`, () => {
     [p.visual, p.audio].forEach(m => m && URL.revokeObjectURL(m.url));
     state.projects = state.projects.filter(x => x.id !== id); if (state.current === p) state.current = null;
+    clearTimeout(saveTimers.get(id)); dbRequest('projects','readwrite',s => s.delete(id)).catch(() => {}); dbRequest('media','readwrite',s => { s.delete(id+':visual'); s.delete(id+':audio'); return s.get(id+':visual'); }).catch(() => {});
     document.dispatchEvent(new CustomEvent('dcpi:delete', { detail: { id } }));
     toast('Proyecto eliminado'); go(state.view);
   });
@@ -709,7 +778,7 @@ $('#btn-export').onclick = async () => {
   document.dispatchEvent(new CustomEvent('dcpi:export', { detail: { project: p, options: opts } }));
   if (!eng || !eng.exportProject) return toast('Motor de exportación no conectado todavía', 'err');
   const btn = $('#btn-export'); btn.disabled = true; setProgress(0);
-  try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); toast('Audio M4A exportado'); renderExport(); }
+  try { p.exported = Object.assign({ format: state.format }, await eng.exportProject(p, opts, setProgress)); await persistProject(p); toast('Audio M4A exportado'); renderExport(); }
   catch (err) { toast(err && err.message ? err.message : 'No se pudo exportar el audio M4A', 'err'); }
   finally { btn.disabled = false; setTimeout(() => setProgress(null), 600); }
 };
@@ -731,6 +800,7 @@ function engineLabel() { $('#engine-state').textContent = window.DCPI.engine ? '
 
 /* ---------- Inicio de la app ---------- */
 applyTheme(); renderSlots(); engineLabel();
+restoreProjects().then(count => { if (count) toast(count + ' proyecto(s) recuperado(s)'); }).catch(() => {});
 $('#view-settings').addEventListener('transitionend', engineLabel);
 window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if ($('#view-' + v) && v !== state.view) go(v); });
 go($('#view-' + location.hash.slice(1)) && !['editor', 'export'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'home');
