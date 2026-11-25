@@ -681,7 +681,7 @@ function applyTheme() { document.documentElement.dataset.theme = settings.theme;
 segmented($('#set-theme'), THEMES, settings.theme, v => { settings.theme = v; applyTheme(); persist(); toast('Tema aplicado'); });
 segmented($('#set-quality'), QUALITIES, settings.quality, v => { settings.quality = v; state.quality = v; persist(); toast('Calidad predeterminada guardada'); });
 $('#app-ver').textContent = window.DCPI.version;
-function engineLabel() { $('#engine-state').textContent = window.DCPI.engine ? 'Conectado' : 'No conectado'; }
+function engineLabel() { $('#engine-state').textContent = window.DCPI.engine ? 'Motor multimedia conectado' : (window.DCPI.nativeBridge ? 'Android conectado · motor multimedia pendiente' : 'No conectado'); }
 
 /* ---------- Inicio de la app ---------- */
 applyTheme(); renderSlots(); engineLabel();
