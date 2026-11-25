@@ -18,6 +18,14 @@ class MainActivity : ComponentActivity() {
     private lateinit var mediaEngine: MediaEngine
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private val selectedUris = mutableMapOf<String, Uri>()
+    private val uriPrefs by lazy { getSharedPreferences("dcpi_sources", MODE_PRIVATE) }
+
+    private fun restoreSelectedUris() {
+        for (kind in listOf("audio", "video", "image")) {
+            val value = uriPrefs.getString(kind, null) ?: continue
+            try { selectedUris[kind] = Uri.parse(value) } catch (_: Exception) {}
+        }
+    }
 
     private val openDocument = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
@@ -28,7 +36,11 @@ class MainActivity : ComponentActivity() {
                 mime.startsWith("image/") -> "image"
                 else -> null
             }
-            if (kind != null) selectedUris[kind] = uri
+            if (kind != null) {
+                selectedUris[kind] = uri
+                try { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
+                uriPrefs.edit().putString(kind, uri.toString()).apply()
+            }
         }
         fileCallback?.onReceiveValue(if (uri != null) arrayOf(uri) else null)
         fileCallback = null
@@ -37,6 +49,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mediaEngine = MediaEngine(this)
+        restoreSelectedUris()
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
