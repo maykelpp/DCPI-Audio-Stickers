@@ -166,11 +166,22 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
-        fun shareExport(uriString: String): Boolean {
+        fun exportMp4(projectId: String, startMs: Long, endMs: Long, projectName: String, volume: Float, quality: String): String {
+            val source = projectUris["$projectId:video"] ?: return JSONObject()
+                .put("error", "Este proyecto no tiene guardado su vídeo original. Vuelve a importarlo para exportar.").toString()
+            return try {
+                mediaEngine.exportMp4(source, startMs, endMs, projectName, volume.coerceIn(0f, 1f), quality).toString()
+            } catch (e: Exception) {
+                JSONObject().put("error", e.message ?: "Error al exportar el vídeo").toString()
+            }
+        }
+
+        @JavascriptInterface
+        fun shareExport(uriString: String, mimeType: String): Boolean {
             return try {
                 val uri = Uri.parse(uriString)
                 val send = Intent(Intent.ACTION_SEND).apply {
-                    type = "audio/mp4"
+                    type = if (mimeType == "video/mp4") "video/mp4" else "audio/mp4"
                     putExtra(Intent.EXTRA_STREAM, uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
