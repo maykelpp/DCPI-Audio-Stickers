@@ -2,13 +2,15 @@
 
 Aplicación Android local para preparar proyectos multimedia y estudiar la compatibilidad de stickers con audio.
 
-## Estado actual — Fase 3 (0.3.0-alpha1)
+## Estado actual — Fase 3 (0.3.0)
 
 - Interfaz HTML empaquetada en Android WebView.
 - Puente JavaScript/Kotlin y selector de archivos Android.
 - Importación de imagen, vídeo y audio.
 - Biblioteca local persistente mediante IndexedDB: conserva metadatos y blobs multimedia en el almacenamiento del WebView.
-- Recuperación de proyectos al volver a abrir la aplicación.
+- Recuperación de proyectos al volver a abrir la aplicación, con aviso si falta algún blob multimedia.
+- Guardado atómico de metadatos y archivos; los cambios frecuentes del editor guardan solo metadatos para evitar reescribir archivos grandes continuamente.
+- Registro de referencias nativas independientes por proyecto para audio y vídeo, incluso cuando un proyecto contiene ambos.
 - Guardado automático de recortes, volumen de previsualización y metadatos de exportación.
 - Eliminación de proyectos y sus medios almacenados.
 - Persistencia de los permisos URI de los archivos seleccionados para que el motor nativo pueda volver a acceder al origen después de reiniciar la app.
@@ -25,7 +27,7 @@ Aplicación Android local para preparar proyectos multimedia y estudiar la compa
 - Exportación MP4/WebM audiovisual todavía no implementada.
 - Las opciones de calidad no recodifican el audio; el motor conserva el flujo de audio fuente.
 - El control de volumen solo afecta a la previsualización, no al archivo exportado.
-- La persistencia de IndexedDB debe validarse en dispositivo con archivos grandes y después de cerrar/abrir la app.
+- La persistencia de IndexedDB requiere validación final en dispositivo con archivos grandes y después de cerrar/abrir la app; el build de CI no sustituye esa prueba.
 - Compatibilidad de códecs y recortes debe probarse con distintos formatos y fabricantes.
 - No se afirma compatibilidad con el sistema de stickers sonoros de WhatsApp hasta disponer de un formato documentado y una prueba real.
 
