@@ -323,7 +323,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
           <div class="choice" id="ex-format"></div>
           <h3>Calidad</h3>
           <div class="seg" id="ex-quality"></div>
-          <p class="muted" style="margin-top:8px">En esta versión, la selección de calidad es informativa: el M4A conserva el audio original sin recodificar.</p>
+          <p class="muted" style="margin-top:8px">La exportación disponible conserva el códec original y recorta sin recodificar. La calidad y el volumen solo afectan a la previsualización; el procesamiento real y la exportación de vídeo aún no están disponibles.</p>
           <dl class="info" id="ex-info"></dl>
           <div class="actions two">
             <button class="btn btn-primary btn-lg" id="btn-export"><svg class="ic"><use href="#i-export"/></svg>Exportar</button>
@@ -489,7 +489,7 @@ if (window.DCPIAndroid) {
       if (onProgress) onProgress(0.15);
       const raw = await new Promise(resolve => setTimeout(() =>
         resolve(DCPIAndroid.exportM4a(
-          sourceKind,
+          project.id, sourceKind,
           Math.round(options.trimStart * 1000),
           Math.round(options.trimEnd * 1000),
           project.name || 'DCPI_Audio'
@@ -635,7 +635,12 @@ $('#btn-open-editor').onclick = () => {
     id: 'p' + Date.now(), name: (visual || audio).name.replace(/\.[^.]+$/, ''), createdAt: Date.now(),
     visual, audio, duration: main ? main.duration : 0, trimStart: 0, trimEnd: main ? main.duration : 0, volume: .8, exported: null
   };
-  state.projects.push(p); state.draft = { image: null, video: null, audio: null }; renderSlots();
+  state.projects.push(p);
+  if (window.DCPIAndroid && window.DCPIAndroid.registerProjectSource) {
+    if (p.audio) window.DCPIAndroid.registerProjectSource(p.id, 'audio');
+    if (!p.audio && p.visual && p.visual.kind === 'video') window.DCPIAndroid.registerProjectSource(p.id, 'video');
+  }
+  state.draft = { image: null, video: null, audio: null }; renderSlots();
   state.current = p; persistProject(p).then(() => toast('Proyecto guardado en este dispositivo')).catch(e => toast('No se pudo guardar: ' + e.message, 'err')); go('editor');
 };
 
@@ -751,7 +756,7 @@ $('#btn-to-export').onclick = () => go('export');
 /* ---------- Biblioteca ---------- */
 function renderLibrary() {
   const list = state.projects.filter(p => state.filter === 'all' || (state.filter === 'sticker' ? p.exported : !p.exported)).reverse();
-  const msgs = { all: ['Tu biblioteca está vacía', 'Los proyectos creados durante esta sesión aparecerán aquí.'], sticker: ['Aún no hay audios exportados', 'Los archivos M4A que exportes aparecerán aquí durante esta sesión.'], project: ['No hay proyectos en esta sesión', 'Crea un proyecto para verlo aquí.'] };
+  const msgs = { all: ['Tu biblioteca está vacía', 'Los proyectos guardados en este dispositivo aparecerán aquí.'], sticker: ['Aún no hay audios exportados', 'Los archivos M4A exportados aparecerán aquí.'], project: ['No hay proyectos guardados', 'Crea un proyecto para conservarlo en este dispositivo.'] };
   $('#library').innerHTML = list.length ? `<div class="grid">${list.map(projectCard).join('')}</div>`
     : emptyState('lib', msgs[state.filter][0], msgs[state.filter][1], state.filter === 'all' ? { nav: 'create', label: 'Crear sticker' } : null);
 }
@@ -761,7 +766,9 @@ function deleteProject(id) {
   confirmDialog('¿Eliminar proyecto?', `“${p.name}” se quitará de la biblioteca. Esta acción no se puede deshacer.`, () => {
     [p.visual, p.audio].forEach(m => m && URL.revokeObjectURL(m.url));
     state.projects = state.projects.filter(x => x.id !== id); if (state.current === p) state.current = null;
-    clearTimeout(saveTimers.get(id)); deleteStoredProject(id).catch(e => toast(e.message || 'No se pudo borrar el proyecto', 'err'));
+    clearTimeout(saveTimers.get(id));
+    if (window.DCPIAndroid && window.DCPIAndroid.deleteProjectSources) window.DCPIAndroid.deleteProjectSources(id);
+    deleteStoredProject(id).catch(e => toast(e.message || 'No se pudo borrar el proyecto', 'err'));
     document.dispatchEvent(new CustomEvent('dcpi:delete', { detail: { id } }));
     toast('Proyecto eliminado'); go(state.view);
   });
