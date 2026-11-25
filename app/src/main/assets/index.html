@@ -491,7 +491,7 @@ async function restoreProjects() {
 }
 
 
-window.DCPI = window.DCPI || { engine: null, version: '0.5.0' };
+window.DCPI = window.DCPI || { engine: null, version: '0.6.0-alpha1' };
 
 if (window.DCPIAndroid) {
   window.DCPI.engine = {
@@ -675,16 +675,13 @@ $('#btn-open-editor').onclick = () => {
 /* ---------- Editor ---------- */
 function openProject(id) { state.current = state.projects.find(p => p.id === id); go('editor'); }
 
-function seededPeaks(n, seed) {
-  let s = seed; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  return Array.from({ length: n }, (_, i) => .18 + .8 * Math.abs(Math.sin(i / 7 + r() * 2)) * (.45 + r() * .55));
-}
+function emptyPeaks(n = 160) { return Array(n).fill(0); }
 function drawWave() {
   const c = $('#wave'), w = c.clientWidth, h = c.clientHeight, dpr = window.devicePixelRatio || 1;
   c.width = w * dpr; c.height = h * dpr; const g = c.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0, 0, w, h);
   const p = state.current, step = 4, n = Math.floor(w / step), start = p.duration ? p.trimStart / p.duration : 0, end = p.duration ? p.trimEnd / p.duration : 1;
   for (let i = 0; i < n; i++) {
-    const v = peaks[Math.floor(i / n * peaks.length)] || .1, bh = Math.max(3, v * (h - 14)), x = i * step, f = i / n;
+    const v = peaks[Math.floor(i / n * peaks.length)] || 0, bh = Math.max(1, v * (h - 14)), x = i * step, f = i / n;
     g.fillStyle = f >= start && f <= end ? '#39ff7a' : '#3b4a40';
     g.fillRect(x, (h - bh) / 2, 2.4, bh);
   }
@@ -710,8 +707,8 @@ function renderEditor() {
   const has = !!(media && p.duration);
   ['b-play', 'b-back', 'b-fwd', 'b-set-in', 'b-set-out', 'b-reset'].forEach(i => $('#' + i).disabled = !has);
   $('#wave-wrap').style.opacity = has ? 1 : .4;
-  peaks = p.peaks || seededPeaks(160, 7 + p.name.length * 13);
-  if (p.audio && window.DCPI.engine && window.DCPI.engine.getWaveform) window.DCPI.engine.getWaveform(p).then(r => { p.peaks = peaks = r; drawWave(); scheduleSave(p); }).catch(() => {});
+  peaks = p.peaks || emptyPeaks();
+  if (p.audio && window.DCPI.engine && window.DCPI.engine.getWaveform && !p.peaks) window.DCPI.engine.getWaveform(p).then(r => { if (state.current !== p) return; p.peaks = peaks = r; drawWave(); scheduleSave(p); }).catch(() => { p.peaks = null; });
   $('#vol').value = Math.round(p.volume * 100); setVol(p.volume * 100);
   $('#t-dur').textContent = fmtTime(p.duration); $('#t-cur').textContent = fmtTime(0); $('#playhead').style.left = '0%';
   setPlayIcon(false);
@@ -850,7 +847,7 @@ function applyTheme() { document.documentElement.dataset.theme = settings.theme;
 segmented($('#set-theme'), THEMES, settings.theme, v => { settings.theme = v; applyTheme(); persist(); toast('Tema aplicado'); });
 segmented($('#set-quality'), QUALITIES, settings.quality, v => { settings.quality = v; state.quality = v; persist(); toast('Calidad predeterminada guardada'); });
 $('#app-ver').textContent = window.DCPI.version;
-function engineLabel() { $('#engine-state').textContent = window.DCPI.engine ? 'Motor multimedia conectado' : (window.DCPI.nativeBridge ? 'Android conectado · motor multimedia pendiente' : 'No conectado'); }
+function engineLabel() { $('#engine-state').textContent = window.DCPI.engine ? 'Android conectado · exportación M4A/MP4 disponible' : (window.DCPI.nativeBridge ? 'Android conectado · inicializando motor multimedia' : 'No conectado'); }
 
 /* ---------- Inicio de la app ---------- */
 applyTheme(); renderSlots(); engineLabel();
