@@ -18,12 +18,18 @@ class MainActivity : ComponentActivity() {
     private lateinit var mediaEngine: MediaEngine
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private val selectedUris = mutableMapOf<String, Uri>()
+    private val projectUris = mutableMapOf<String, Uri>()
     private val uriPrefs by lazy { getSharedPreferences("dcpi_sources", MODE_PRIVATE) }
 
     private fun restoreSelectedUris() {
         for (kind in listOf("audio", "video", "image")) {
             val value = uriPrefs.getString(kind, null) ?: continue
             try { selectedUris[kind] = Uri.parse(value) } catch (_: Exception) {}
+        }
+        uriPrefs.all.forEach { (key, value) ->
+            if (key.startsWith("project:") && value is String) {
+                try { projectUris[key.removePrefix("project:")] = Uri.parse(value) } catch (_: Exception) {}
+            }
         }
     }
 
@@ -129,9 +135,29 @@ class MainActivity : ComponentActivity() {
             .toString()
 
         @JavascriptInterface
-        fun exportM4a(sourceKind: String, startMs: Long, endMs: Long, projectName: String): String {
-            val source = selectedUris[sourceKind] ?: return JSONObject()
-                .put("error", "No se encontró el archivo de origen seleccionado").toString()
+        fun registerProjectSource(projectId: String, sourceKind: String): Boolean {
+            if (projectId.isBlank() || sourceKind !in listOf("audio", "video")) return false
+            val source = selectedUris[sourceKind] ?: return false
+            val key = "$projectId:$sourceKind"
+            projectUris[key] = source
+            uriPrefs.edit().putString("project:$key", source.toString()).apply()
+            return true
+        }
+
+        @JavascriptInterface
+        fun deleteProjectSources(projectId: String) {
+            if (projectId.isBlank()) return
+            listOf("audio", "video").forEach { kind ->
+                val key = "$projectId:$kind"
+                projectUris.remove(key)
+                uriPrefs.edit().remove("project:$key").apply()
+            }
+        }
+
+        @JavascriptInterface
+        fun exportM4a(projectId: String, sourceKind: String, startMs: Long, endMs: Long, projectName: String): String {
+            val source = projectUris["$projectId:$sourceKind"] ?: return JSONObject()
+                .put("error", "Este proyecto no tiene guardado su archivo de origen. Vuelve a importarlo para exportar.").toString()
             return try {
                 mediaEngine.exportM4a(source, startMs, endMs, projectName).toString()
             } catch (e: Exception) {
