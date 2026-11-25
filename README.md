@@ -2,7 +2,7 @@
 
 Aplicación Android local para preparar proyectos multimedia y estudiar la compatibilidad de stickers con audio.
 
-## Estado actual — Fase 4 en implementación (0.4.0-alpha1)
+## Estado actual — Fase 5 en implementación (0.5.0-alpha1)
 
 - Interfaz HTML empaquetada en Android WebView.
 - Puente JavaScript/Kotlin y selector de archivos Android.
@@ -18,15 +18,17 @@ Aplicación Android local para preparar proyectos multimedia y estudiar la compa
 - Recorte y exportación M4A con Media3 Transformer, recodificación AAC, volumen aplicado al archivo y perfiles de calidad solicitados (96, 160 y 256 kbps; el codificador puede ajustar la tasa final).
 - Exportación MP4 desde un vídeo importado, con recorte, vídeo H.264 y audio AAC cuando el origen contiene audio; el volumen se aplica a esa pista.
 - Guardado de resultados en Descargas/DCPI Audio Stickers.
-- Compartir M4A mediante el menú nativo de Android.
+- Compartir archivos M4A y MP4 mediante el menú nativo de Android.
+- Biblioteca con búsqueda por nombre, archivo y formato; filtros de proyectos y exportaciones.
+- Exportación MP4 conectada desde la interfaz al puente Android; el selector de calidad modifica el bitrate de audio AAC, no la calidad de vídeo.
 - Forma de onda analizada en WebAudio para archivos compatibles.
 - Manejo más seguro cuando el códec no declara tamaño máximo de entrada.
 
 ## Límites conocidos
 
 - El M4A exportado es un archivo de audio, no un sticker sonoro de WhatsApp.
-- Exportación MP4/WebM audiovisual todavía no implementada.
-- La exportación audiovisual MP4/WebM todavía no está implementada; el motor de esta fase genera solo audio M4A.
+- WebM todavía no está implementado.
+- MP4 usa el audio integrado en el vídeo; todavía no mezcla una pista de audio independiente importada en el proyecto.
 - El procesamiento AAC depende de los decodificadores y codificadores disponibles en Android y debe probarse con distintos formatos.
 - La persistencia de IndexedDB requiere validación final en dispositivo con archivos grandes y después de cerrar/abrir la app; el build de CI no sustituye esa prueba.
 - Compatibilidad de códecs, calidad, ganancia, recortes, sincronización, duración y uso de memoria debe probarse en dispositivo con distintos formatos y fabricantes.
