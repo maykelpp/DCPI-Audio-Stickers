@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
                             window.DCPI = window.DCPI || {};
                             window.DCPI.nativeBridge = info;
                             const status = document.getElementById('engine-state');
-                            if (status) status.textContent = 'Motor multimedia conectado · extracción M4A';
+                            if (status) status.textContent = 'Android conectado · exportación M4A/MP4';
                             const version = document.getElementById('app-ver');
                             if (version) version.textContent = info.version;
                           } catch (e) { console.error('DCPI bridge:', e); }
@@ -131,7 +131,7 @@ class MainActivity : ComponentActivity() {
             .put("android", android.os.Build.VERSION.RELEASE)
             .put("sdk", android.os.Build.VERSION.SDK_INT)
             .put("bridge", "connected")
-            .put("mediaEngine", "media3-aac-trim-gain")
+            .put("mediaEngine", "media3-aac-m4a-mp4")
             .toString()
 
         @JavascriptInterface
@@ -185,7 +185,7 @@ class MainActivity : ComponentActivity() {
                     putExtra(Intent.EXTRA_STREAM, uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                runOnUiThread { startActivity(Intent.createChooser(send, "Compartir audio")) }
+                runOnUiThread { startActivity(Intent.createChooser(send, if (mimeType == "video/mp4") "Compartir vídeo" else "Compartir audio")) }
                 true
             } catch (_: Exception) { false }
         }
