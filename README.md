@@ -29,6 +29,17 @@ Aplicación Android local para preparar proyectos multimedia y estudiar la compa
 - Forma de onda analizada en WebAudio para archivos compatibles.
 - Manejo más seguro cuando el códec no declara tamaño máximo de entrada.
 
+
+## Fase 8 — subtítulos flotantes (0.8.0-alpha1)
+
+- Capa de subtítulos independiente sobre la vista previa del sticker.
+- Posición horizontal y vertical ajustable mediante arrastre táctil.
+- Controles de texto, tamaño, color, animación de entrada y visibilidad.
+- Ventana temporal de inicio y fin para mostrar el subtítulo durante la reproducción.
+- Preferencias de subtítulos guardadas junto a los metadatos del proyecto en IndexedDB.
+- Esta fase implementa un bloque de texto sincronizado por intervalo; todavía no incluye transcripción automática ni karaoke palabra por palabra.
+- La capa es parte del editor DCPI y no se exporta aún como sticker sonoro nativo de WhatsApp.
+
 ## Límites conocidos
 
 - El M4A exportado es un archivo de audio, no un sticker sonoro de WhatsApp.
