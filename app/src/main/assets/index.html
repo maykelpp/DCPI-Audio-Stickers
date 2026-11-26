@@ -179,6 +179,22 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+
+/* DCPI Sound Stickers — subtítulos como capa independiente */
+.preview{position:relative;touch-action:none}
+.caption-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.caption-float{position:absolute;left:50%;top:78%;transform:translate(-50%,-50%);max-width:90%;padding:5px 10px;color:#fff;font-weight:800;font-size:22px;line-height:1.15;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;text-shadow:0 2px 5px #000,0 0 10px #000;pointer-events:auto;touch-action:none;cursor:move;border:1px dashed transparent;border-radius:8px}
+.caption-float.selected{border-color:var(--neon);background:rgba(0,0,0,.12)}
+.caption-float.anim-pop{animation:captionPop .55s both}
+.caption-float.anim-slide{animation:captionSlide .45s both}
+.caption-float.anim-type{animation:captionPop .35s both}
+@keyframes captionPop{from{opacity:0;scale:.55}to{opacity:1;scale:1}}
+@keyframes captionSlide{from{opacity:0;translate:0 24px}to{opacity:1;translate:0 0}}
+.caption-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.caption-controls label{display:grid;gap:5px;color:var(--muted);font-size:12px}
+.caption-controls input,.caption-controls select{width:100%;min-height:40px;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:8px}
+.caption-controls .wide{grid-column:1/-1}
+
 </style>
 </head>
 <body>
@@ -291,6 +307,21 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
               <button class="btn btn-ghost btn-sm" id="b-reset">Restablecer</button>
             </div>
           </div>
+        </div>
+        <div class="panel" id="caption-panel">
+          <h3>Subtítulos flotantes</h3>
+          <p class="muted" style="margin-bottom:12px">Arrastra el texto sobre el sticker. Es una capa independiente.</p>
+          <div class="caption-controls">
+            <label class="wide">Texto<input id="cap-text" type="text" maxlength="180" placeholder="Escribe el subtítulo"></label>
+            <label>Tamaño<input id="cap-size" type="range" min="12" max="48" value="22"></label>
+            <label>Color<input id="cap-color" type="color" value="#ffffff"></label>
+            <label>Entrada<select id="cap-anim"><option value="none">Sin animación</option><option value="anim-pop">Rebote / Pop</option><option value="anim-slide">Deslizar</option><option value="anim-type">Aparición</option></select></label>
+            <label>Inicio (seg.)<input id="cap-start" type="number" min="0" step="0.1" value="0"></label>
+            <label>Fin (seg.)<input id="cap-end" type="number" min="0" step="0.1" value="999"></label>
+            <label class="wide">Posición vertical<input id="cap-y" type="range" min="5" max="95" value="78"></label>
+          </div>
+          <div class="actions two"><button class="btn btn-outline" id="cap-center">Centrar</button><button class="btn btn-outline" id="cap-toggle">Mostrar / ocultar</button></div>
+          <p class="muted" id="cap-status">La capa se guarda con el proyecto.</p>
         </div>
         <div class="panel info-panel">
           <h3>Información del archivo</h3>
@@ -431,7 +462,7 @@ function mediaRecord(projectId, slot, item) {
 }
 function projectRecord(p) {
   return { id:p.id, name:p.name, createdAt:p.createdAt, duration:p.duration, trimStart:p.trimStart, trimEnd:p.trimEnd, volume:p.volume, exported:p.exported || null,
-    visualKind:p.visual && p.visual.kind || null, visualKey:p.visual ? p.id + ':visual' : null, audioKey:p.audio ? p.id + ':audio' : null, peaks:p.peaks || null };
+    visualKind:p.visual && p.visual.kind || null, visualKey:p.visual ? p.id + ':visual' : null, audioKey:p.audio ? p.id + ':audio' : null, peaks:p.peaks || null, caption:p.caption || null };
 }
 async function persistProjectMetadata(p) {
   if (!p) return;
@@ -479,7 +510,7 @@ async function restoreProjects() {
       const make = (row, kind) => row ? { kind, file: new File([row.blob],row.name,{type:row.type}), url: URL.createObjectURL(row.blob), name:row.name, size:row.size, type:row.type, duration:row.duration||0 } : null;
       const visualRow = r.visualKey && mediaMap.get(r.visualKey), audioRow = r.audioKey && mediaMap.get(r.audioKey);
       if ((r.visualKey && !visualRow) || (r.audioKey && !audioRow)) incomplete++;
-      const p = { id:r.id, name:r.name, createdAt:r.createdAt, duration:r.duration||0, trimStart:r.trimStart||0, trimEnd:r.trimEnd||r.duration||0, volume:r.volume == null ? 0.8 : r.volume, exported:r.exported||null, peaks:r.peaks||null,
+      const p = { id:r.id, name:r.name, createdAt:r.createdAt, duration:r.duration||0, trimStart:r.trimStart||0, trimEnd:r.trimEnd||r.duration||0, volume:r.volume == null ? 0.8 : r.volume, exported:r.exported||null, peaks:r.peaks||null, caption:r.caption||null,
         visual:make(visualRow, r.visualKind || 'image'), audio:make(audioRow, 'audio'), incomplete:!!((r.visualKey && !visualRow) || (r.audioKey && !audioRow)) };
       state.projects.push(p);
     }
@@ -717,6 +748,7 @@ function renderEditor() {
   if (p.audio) rows.push(['Audio', `${p.audio.type || 'audio'} · ${fmtSize(p.audio.size)}`]);
   rows.push(['Duración', p.duration ? fmtTime(p.duration) : 'Sin pista temporal'], ['Onda de audio', p.audio ? (p.peaks ? 'Analizada' : 'Pendiente de analizar') : 'Sin audio']);
   $('#ed-info').innerHTML = infoList(rows);
+  initCaptionLayer(p);
   requestAnimationFrame(layoutTrim);
 }
 function stopMedia() { if (media) { media.pause(); media.ontimeupdate = null; } if (slaveVideo) slaveVideo.pause(); }
@@ -777,6 +809,38 @@ $('#wave-wrap').addEventListener('pointerdown', e => {
 });
 window.addEventListener('resize', () => { if (state.view === 'editor' && state.current) layoutTrim(); });
 $('#btn-to-export').onclick = () => go('export');
+
+
+// Capa de subtítulos independiente: posición y estilo guardados en metadatos.
+function initCaptionLayer(p) {
+  const pv = $('#preview');
+  let layer = $('.caption-layer', pv);
+  if (!layer) { layer = document.createElement('div'); layer.className='caption-layer'; pv.appendChild(layer); }
+  let text = $('.caption-float', layer);
+  if (!text) { text=document.createElement('div'); text.className='caption-float'; text.id='caption-float'; text.textContent='Tu subtítulo'; layer.appendChild(text); }
+  p.caption = Object.assign({text:'',x:50,y:78,size:22,color:'#ffffff',anim:'none',start:0,end:999,visible:true},p.caption||{});
+  const q=id=>$('#'+id), sync=()=>{
+    text.textContent=p.caption.text||'Tu subtítulo';
+    text.style.left=p.caption.x+'%'; text.style.top=p.caption.y+'%'; text.style.fontSize=p.caption.size+'px'; text.style.color=p.caption.color;
+    text.className='caption-float'+(p.caption.anim!=='none'?' '+p.caption.anim:'')+(p.caption.visible?' selected':'');
+    text.style.display=p.caption.visible?'block':'none';
+    q('cap-text').value=p.caption.text; q('cap-size').value=p.caption.size; q('cap-color').value=p.caption.color;
+    q('cap-anim').value=p.caption.anim; q('cap-start').value=p.caption.start; q('cap-end').value=p.caption.end; q('cap-y').value=p.caption.y;
+  };
+  const save=()=>{scheduleSave(p);q('cap-status').textContent='Cambios guardados en el proyecto';};
+  [['cap-text','text',v=>v],['cap-size','size',Number],['cap-color','color',v=>v],['cap-anim','anim',v=>v],['cap-start','start',Number],['cap-end','end',Number],['cap-y','y',Number]].forEach(([id,key,cast])=>{
+    const el=q(id); el.oninput=()=>{p.caption[key]=cast(el.value);sync();save();};
+  });
+  q('cap-center').onclick=()=>{p.caption.x=50;p.caption.y=78;sync();save();};
+  q('cap-toggle').onclick=()=>{p.caption.visible=!p.caption.visible;sync();save();};
+  let dragging=false;
+  text.onpointerdown=e=>{if(!p.caption.visible)return;dragging=true;text.setPointerCapture(e.pointerId);e.preventDefault();};
+  text.onpointermove=e=>{if(!dragging)return;const r=pv.getBoundingClientRect();p.caption.x=clamp((e.clientX-r.left)/r.width*100,3,97);p.caption.y=clamp((e.clientY-r.top)/r.height*100,5,95);sync();};
+  text.onpointerup=text.onpointercancel=()=>{if(dragging){dragging=false;save();}};
+  const updateTime=()=>{const t=media?media.currentTime:0;text.style.visibility=(p.caption.visible && t>=p.caption.start && t<=p.caption.end)?'visible':'hidden';};
+  if(media) media.addEventListener('timeupdate',updateTime);
+  sync();updateTime();
+}
 
 /* ---------- Biblioteca ---------- */
 function renderLibrary() {
