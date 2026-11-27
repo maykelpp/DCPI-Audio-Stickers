@@ -113,11 +113,11 @@ class ElizaWAStore(private val context: Context) {
     }
 
     private fun sanitizeContact(value: String): String =
-        value.trim().replace(Regex("[\\\\/:*?\"<>|\\\\p{Cntrl}]"), "_")
+        value.trim().replace(Regex("""[\\/:*?"<>|\\p{Cntrl}]"""), "_")
             .trim('.', ' ').take(48)
 
     private fun sanitizeFileName(value: String): String {
-        val cleaned = value.replace(Regex("[\\\\/:*?\"<>|\\\\p{Cntrl}]"), "_")
+        val cleaned = value.replace(Regex("""[\\/:*?"<>|\\p{Cntrl}]"""), "_")
             .trim('.', ' ')
             .take(100)
         return cleaned.ifBlank { "estado_${System.currentTimeMillis()}" }
