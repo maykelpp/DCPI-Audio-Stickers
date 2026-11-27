@@ -155,6 +155,51 @@ class MainActivity : ComponentActivity() {
             .toString()
 
         @JavascriptInterface
+        fun hasStatusesFolder(): Boolean =
+            !elizaPrefs.getString("statuses_tree", null).isNullOrBlank()
+
+        @JavascriptInterface
+        fun openStatusesFolder(): Boolean {
+            runOnUiThread { openStatusesTree.launch(null) }
+            return true
+        }
+
+        @JavascriptInterface
+        fun listAvailableStatuses(): String {
+            val value = elizaPrefs.getString("statuses_tree", null) ?: return "[]"
+            return try { elizaWAStore.listAvailable(Uri.parse(value)).toString() }
+            catch (_: Exception) { "[]" }
+        }
+
+        @JavascriptInterface
+        fun listSavedStatuses(): String =
+            try { elizaWAStore.listSaved().toString() } catch (_: Exception) { "[]" }
+
+        @JavascriptInterface
+        fun copyStatuses(selectedJson: String, contactLabel: String): Boolean {
+            val treeValue = elizaPrefs.getString("statuses_tree", null) ?: return false
+            return try {
+                statusExecutor.execute {
+                    val result = try {
+                        elizaWAStore.copySelected(Uri.parse(treeValue), selectedJson, contactLabel)
+                    } catch (e: Exception) {
+                        JSONObject().put("count", 0).put("failed", 0)
+                            .put("error", e.message ?: "No se pudieron copiar los estados")
+                    }
+                    val payload = JSONObject.quote(result.toString())
+                    runOnUiThread {
+                        webView.evaluateJavascript("window.ElizaWA && window.ElizaWA.onCopyComplete(JSON.parse($payload))", null)
+                    }
+                }
+                true
+            } catch (_: Exception) { false }
+        }
+
+        @JavascriptInterface
+        fun deleteSavedStatus(relativeId: String): Boolean =
+            try { elizaWAStore.deleteSaved(relativeId) } catch (_: Exception) { false }
+
+        @JavascriptInterface
         fun registerProjectSource(projectId: String, sourceKind: String): Boolean {
             if (projectId.isBlank() || sourceKind !in listOf("audio", "video")) return false
             val source = selectedUris[sourceKind] ?: return false
