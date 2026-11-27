@@ -235,6 +235,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <button class="nav-btn" data-nav="home"><svg class="ic"><use href="#i-home"/></svg><span>Inicio</span></button>
       <button class="nav-btn" data-nav="create"><svg class="ic"><use href="#i-plus"/></svg><span>Crear</span></button>
       <button class="nav-btn" data-nav="library"><svg class="ic"><use href="#i-lib"/></svg><span>Biblioteca</span></button>
+      <button class="nav-btn" data-nav="elizawa"><svg class="ic"><use href="#i-image"/></svg><span>ElizaWA</span></button>
       <button class="nav-btn" data-nav="settings"><svg class="ic"><use href="#i-gear"/></svg><span>Ajustes</span></button>
     </nav>
   </aside>
@@ -340,6 +341,38 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       </div>
       <div class="field" style="margin:14px 0"><input id="library-search" type="search" placeholder="Buscar por nombre o formato" aria-label="Buscar en la biblioteca"></div>
       <div id="library"></div>
+    </section>
+
+    <!-- ElizaWA: estados guardados en el almacenamiento privado de la app -->
+    <section class="view" id="view-elizawa" data-title="ElizaWA">
+      <header class="page-head"><h1>♡ ElizaWA</h1><p>Descarga y conserva estados disponibles de WhatsApp.</p></header>
+      <div class="eliza-hero">
+        <h2>Tu archivo de estados 💙</h2>
+        <p>Selecciona la carpeta de estados, marca hasta 30 archivos y cópialos al almacenamiento privado de DCPI.</p>
+        <div class="eliza-actions">
+          <button class="btn btn-primary" id="eliza-pick-folder">Seleccionar carpeta de estados</button>
+          <button class="btn btn-outline" id="eliza-refresh">Actualizar</button>
+        </div>
+        <p class="muted" id="eliza-folder-status">Carpeta todavía no configurada.</p>
+      </div>
+      <div class="panel">
+        <h3>Estados disponibles</h3>
+        <p class="muted">Elige los archivos que todavía estén accesibles en el dispositivo.</p>
+        <label style="display:block;margin-top:12px;color:var(--muted);font-size:12px">Guardar bajo el contacto (etiqueta manual)
+          <input class="eliza-field" id="eliza-contact" maxlength="48" placeholder="Ej. Kristy, Mamá, Amigo...">
+        </label>
+        <div class="eliza-actions">
+          <button class="btn btn-outline btn-sm" id="eliza-select-all">Seleccionar todos</button>
+          <button class="btn btn-primary btn-sm" id="eliza-save-selected">Descargar / copiar seleccionados</button>
+        </div>
+        <div id="eliza-available" class="eliza-list"><div class="eliza-empty">Selecciona la carpeta de estados para comenzar.</div></div>
+        <p class="muted" id="eliza-copy-status" style="margin-top:10px" aria-live="polite"></p>
+      </div>
+      <div class="panel">
+        <div class="row-head" style="margin-top:0"><h2>Estados guardados</h2><span class="muted" id="eliza-saved-count">0 archivos</span></div>
+        <p class="muted">Las copias permanecen en ElizaWA aunque el estado original deje de estar disponible.</p>
+        <div id="eliza-saved"><div class="eliza-empty">Todavía no hay estados guardados.</div></div>
+      </div>
     </section>
 
     <!-- 5. EXPORTACIÓN -->
@@ -611,6 +644,98 @@ function projectCard(p) {
     <div class="card-foot"><button class="btn btn-outline btn-sm" data-open="${p.id}">${icon('open')}Abrir</button><button class="btn btn-ghost btn-sm" data-del="${p.id}">${icon('trash')}Eliminar</button></div></article>`;
 }
 
+/* ---------- ElizaWA: archivo local de estados ---------- */
+const elizaState = { available: [], selected: new Set(), saved: [] };
+function elizaBridge() { return !!(window.DCPIAndroid && DCPIAndroid.listAvailableStatuses); }
+function elizaBytes(n) { return fmtSize(Number(n || 0)); }
+function elizaDate(n) { return n ? new Date(Number(n)).toLocaleString() : 'Fecha no disponible'; }
+function renderElizaAvailable() {
+  const host = $('#eliza-available');
+  if (!elizaState.available.length) {
+    host.innerHTML = '<div class="eliza-empty">No hay estados disponibles en la carpeta seleccionada.</div>';
+    return;
+  }
+  host.innerHTML = elizaState.available.map(item => `
+    <label class="eliza-item">
+      <input type="checkbox" data-eliza-select="${esc(item.id)}" ${elizaState.selected.has(item.id) ? 'checked' : ''}>
+      <span class="eliza-meta"><strong>${esc(item.name)}</strong><small>${item.mime.startsWith('video/') ? 'Vídeo' : 'Imagen'} · ${elizaBytes(item.size)} · ${elizaDate(item.modified)}</small></span>
+    </label>`).join('');
+  host.querySelectorAll('[data-eliza-select]').forEach(input => input.onchange = () => {
+    const id = input.dataset.elizaSelect;
+    if (input.checked) {
+      if (elizaState.selected.size >= 30) { input.checked = false; return toast('Máximo 30 estados por descarga', 'err'); }
+      elizaState.selected.add(id);
+    } else elizaState.selected.delete(id);
+  });
+}
+function renderElizaSaved() {
+  const host = $('#eliza-saved'), groups = new Map();
+  elizaState.saved.forEach(item => {
+    if (!groups.has(item.contact)) groups.set(item.contact, []);
+    groups.get(item.contact).push(item);
+  });
+  $('#eliza-saved-count').textContent = elizaState.saved.length + ' archivos';
+  if (!elizaState.saved.length) { host.innerHTML = '<div class="eliza-empty">Todavía no hay estados guardados.</div>'; return; }
+  host.innerHTML = [...groups.entries()].map(([contact,items]) => `
+    <section><h3 class="eliza-contact">${esc(contact)} · ${items.length}</h3>
+      <div class="eliza-list">${items.map(item => {
+        const visual = item.mime.startsWith('image/')
+          ? `<img class="eliza-preview" src="${esc(item.url)}" alt="">`
+          : `<div class="eliza-preview" style="display:grid;place-items:center;color:#8dccff">▶</div>`;
+        return `<article class="eliza-item">${visual}<span class="eliza-meta"><strong>${esc(item.name)}</strong><small>${elizaBytes(item.size)} · ${elizaDate(item.modified)}</small></span><button class="icon-btn" data-eliza-delete="${esc(item.id)}" aria-label="Eliminar estado">${icon('trash')}</button></article>`;
+      }).join('')}</div>
+    </section>`).join('');
+  host.querySelectorAll('[data-eliza-delete]').forEach(button => button.onclick = () => {
+    if (!DCPIAndroid.deleteSavedStatus(button.dataset.elizaDelete)) return toast('No se pudo eliminar el archivo', 'err');
+    refreshElizaSaved(); toast('Estado eliminado');
+  });
+}
+function refreshElizaSaved() {
+  if (!elizaBridge()) return;
+  try { elizaState.saved = JSON.parse(DCPIAndroid.listSavedStatuses() || '[]'); }
+  catch { elizaState.saved = []; }
+  renderElizaSaved();
+}
+function refreshElizaAvailable() {
+  if (!elizaBridge()) { $('#eliza-available').innerHTML = '<div class="eliza-empty">El puente Android no está conectado.</div>'; return; }
+  const connected = DCPIAndroid.hasStatusesFolder();
+  $('#eliza-folder-status').textContent = connected ? 'Carpeta conectada. Los estados que sigan disponibles aparecerán aquí.' : 'Carpeta todavía no configurada.';
+  try { elizaState.available = connected ? JSON.parse(DCPIAndroid.listAvailableStatuses() || '[]') : []; }
+  catch { elizaState.available = []; }
+  elizaState.selected.clear();
+  renderElizaAvailable();
+}
+function renderElizaWA() { refreshElizaAvailable(); refreshElizaSaved(); }
+window.ElizaWA = {
+  onFolderSelected(ok) {
+    if (!ok) return toast('No se seleccionó la carpeta', 'err');
+    refreshElizaAvailable(); toast('Carpeta de estados conectada');
+  },
+  onCopyComplete(result) {
+    const count = Number(result.count || 0), failed = Number(result.failed || 0);
+    $('#eliza-copy-status').textContent = result.error || (count + ' estado(s) guardado(s)' + (failed ? ' · ' + failed + ' no se pudieron copiar' : ''));
+    elizaState.selected.clear(); refreshElizaAvailable(); refreshElizaSaved();
+    if (count) toast(count + ' estado(s) guardado(s)');
+    else toast(result.error || 'No se pudo guardar ningún estado', 'err');
+  }
+};
+$('#eliza-pick-folder').onclick = () => {
+  if (!elizaBridge() || !DCPIAndroid.openStatusesFolder()) return toast('No se pudo abrir el selector de carpetas', 'err');
+};
+$('#eliza-refresh').onclick = renderElizaWA;
+$('#eliza-select-all').onclick = () => {
+  elizaState.selected.clear();
+  elizaState.available.slice(0,30).forEach(item => elizaState.selected.add(item.id));
+  renderElizaAvailable();
+};
+$('#eliza-save-selected').onclick = () => {
+  if (!elizaState.selected.size) return toast('Selecciona al menos un estado', 'err');
+  const contact = $('#eliza-contact').value.trim() || 'Sin asignar';
+  $('#eliza-copy-status').textContent = 'Copiando archivos en segundo plano...';
+  if (!DCPIAndroid.copyStatuses(JSON.stringify([...elizaState.selected]), contact))
+    return toast('No se pudo iniciar la copia', 'err');
+};
+
 /* ---------- Navegación ---------- */
 function go(view) {
   if ((view === 'editor' || view === 'export') && !state.current) { toast('Primero crea o abre un proyecto', 'err'); view = 'create'; }
@@ -622,6 +747,7 @@ function go(view) {
   $('#app .stage').scrollTop = 0;
   if (view === 'home') renderHome();
   if (view === 'library') renderLibrary();
+  if (view === 'elizawa') renderElizaWA();
   if (view === 'editor') renderEditor();
   if (view === 'export') renderExport();
   if (view === 'settings') engineLabel();
