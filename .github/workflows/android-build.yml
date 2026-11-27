@@ -2,7 +2,7 @@ name: Android debug build
 on:
   workflow_dispatch:
   push:
-    branches: [ main, phase-1-engine ]
+    branches: [ main, phase-1-engine, feature/elizawa-status-vault ]
 
 jobs:
   build:
