@@ -11,15 +11,32 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import java.util.concurrent.Executors
 import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
     private lateinit var mediaEngine: MediaEngine
+    private lateinit var elizaWAStore: ElizaWAStore
+    private val statusExecutor = Executors.newSingleThreadExecutor()
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private val selectedUris = mutableMapOf<String, Uri>()
     private val projectUris = mutableMapOf<String, Uri>()
     private val uriPrefs by lazy { getSharedPreferences("dcpi_sources", MODE_PRIVATE) }
+    private val elizaPrefs by lazy { getSharedPreferences("elizawa", MODE_PRIVATE) }
+    private val openStatusesTree = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            try {
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                elizaPrefs.edit().putString("statuses_tree", uri.toString()).apply()
+                webView.evaluateJavascript("window.ElizaWA && window.ElizaWA.onFolderSelected(true)", null)
+            } catch (e: Exception) {
+                webView.evaluateJavascript("window.ElizaWA && window.ElizaWA.onFolderSelected(false)", null)
+            }
+        } else {
+            webView.evaluateJavascript("window.ElizaWA && window.ElizaWA.onFolderSelected(false)", null)
+        }
+    }
 
     private fun restoreSelectedUris() {
         for (kind in listOf("audio", "video", "image")) {
@@ -55,6 +72,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mediaEngine = MediaEngine(this)
+        elizaWAStore = ElizaWAStore(this)
         restoreSelectedUris()
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true
@@ -119,6 +137,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         fileCallback?.onReceiveValue(null)
         fileCallback = null
+        statusExecutor.shutdown()
         webView.destroy()
         super.onDestroy()
     }
@@ -132,6 +151,7 @@ class MainActivity : ComponentActivity() {
             .put("sdk", android.os.Build.VERSION.SDK_INT)
             .put("bridge", "connected")
             .put("mediaEngine", "media3-aac-m4a-mp4")
+            .put("elizawa", "status-vault")
             .toString()
 
         @JavascriptInterface
