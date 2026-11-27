@@ -681,7 +681,7 @@ function renderElizaSaved() {
       <div class="eliza-list">${items.map(item => {
         const visual = item.mime.startsWith('image/')
           ? `<img class="eliza-preview" src="${esc(item.url)}" alt="">`
-          : `<div class="eliza-preview" style="display:grid;place-items:center;color:#8dccff">▶</div>`;
+          : `<video class="eliza-preview" src="${esc(item.url)}" controls playsinline preload="metadata"></video>`;
         return `<article class="eliza-item">${visual}<span class="eliza-meta"><strong>${esc(item.name)}</strong><small>${elizaBytes(item.size)} · ${elizaDate(item.modified)}</small></span><button class="icon-btn" data-eliza-delete="${esc(item.id)}" aria-label="Eliminar estado">${icon('trash')}</button></article>`;
       }).join('')}</div>
     </section>`).join('');
